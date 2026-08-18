@@ -6,17 +6,29 @@ import os
 from botocore.exceptions import ClientError
 
 
-def lambda_handler(event, context):
-    print("EC2 -> Lambda로 전달된 데이터", event["body"])
+def parse_event(event):
+    """Function URL 요청(body가 JSON 문자열)과
+    Lambda 콘솔 테스트 이벤트({"content": "...", "noteId": 1} 같은 평면 객체)를 모두 받는다."""
+    if not isinstance(event, dict):
+        return None
 
+    body = event.get("body")
+    if isinstance(body, str):
+        return json.loads(body)
+    if isinstance(body, dict):
+        return body
+    return event
+
+
+def lambda_handler(event, context):
     # Bedrock 클라이언트 초기화
     bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
 
     try:
-        input_data = json.loads(event["body"])
+        input_data = parse_event(event)
     except json.JSONDecodeError as e:
         print("JSON 파싱 오류:", e)
-        return {"statusCode": 400, "body": "Invalid JSON format"}
+        return {"statusCode": 400, "body": f"Invalid JSON format: {e}"}
 
     if not input_data or "content" not in input_data or "noteId" not in input_data:
         print("Invalid request: No content or noteId provided")
@@ -24,6 +36,7 @@ def lambda_handler(event, context):
 
     user_message = input_data["content"]
     note_id = input_data["noteId"]
+    print("EC2 -> Lambda로 전달된 데이터", input_data)
     print(
         "ai한테 보낼 유저 메시지 내용",
         user_message,
@@ -75,4 +88,4 @@ def lambda_handler(event, context):
 
     except (ClientError, Exception) as e:
         print(f"Error: {e}")
-        raise Exception("Lambda function error")
+        return {"statusCode": 500, "body": f"Lambda function error: {e}"}

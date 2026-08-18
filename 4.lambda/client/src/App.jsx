@@ -1,19 +1,20 @@
-// App.js
+// App.jsx
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 function App() {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [aiRequestInProgress, setAiRequestInProgress] = useState({
-    id: null,
-    type: null,
-  });
+  // 노트 단위 AI 요청 상태: { [noteId]: "gemini" | "nova" }
+  const [pendingAi, setPendingAi] = useState({});
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!SERVER_URL) return;
+
     fetchNotes();
     const interval = setInterval(fetchNotes, 10000);
     return () => clearInterval(interval);
@@ -29,16 +30,27 @@ function App() {
 
       const data = await response.json();
 
-      // 데이터가 배열인지 확인
-      if (Array.isArray(data)) {
-        setNotes(data);
-      } else {
-        console.error("서버에서 배열이 아닌 데이터를 받았습니다:", data);
-        setNotes([]);
+      if (!Array.isArray(data)) {
+        throw new Error("서버에서 배열이 아닌 데이터를 받았습니다");
       }
-    } catch (error) {
-      console.error("노트 조회 중 오류 발생:", error);
-      setNotes([]); // 오류 시 빈 배열로 설정
+
+      setNotes(data);
+      setError(null);
+      // AI 응답은 Lambda가 DB에 쓴다. 폴링으로 도착한 노트에 ai_note가 생겼으면 대기 상태를 푼다.
+      setPendingAi((prev) => {
+        const next = {};
+        Object.entries(prev).forEach(([id, type]) => {
+          const note = data.find((n) => String(n.id) === id);
+          if (note && !note.ai_note) {
+            next[id] = type;
+          }
+        });
+        return next;
+      });
+    } catch (err) {
+      // 목록은 그대로 두고 배너로만 알린다 (일시적 오류로 화면이 비지 않도록)
+      console.error("노트 조회 중 오류 발생:", err);
+      setError(`노트를 불러오지 못했습니다: ${err.message}`);
     }
   };
 
@@ -47,15 +59,21 @@ function App() {
 
     setIsLoading(true);
     try {
-      await fetch(`${SERVER_URL}/notes`, {
+      const response = await fetch(`${SERVER_URL}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newNote }),
       });
-      await fetchNotes();
+
+      if (!response.ok) {
+        throw new Error(`서버 오류: ${response.status}`);
+      }
+
       setNewNote("");
-    } catch (error) {
-      console.error("노트 추가 중 오류 발생:", error);
+      await fetchNotes();
+    } catch (err) {
+      console.error("노트 추가 중 오류 발생:", err);
+      setError(`노트 추가에 실패했습니다: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -63,10 +81,18 @@ function App() {
 
   const deleteNote = async (id) => {
     try {
-      await fetch(`${SERVER_URL}/notes/${id}`, { method: "DELETE" });
+      const response = await fetch(`${SERVER_URL}/notes/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`서버 오류: ${response.status}`);
+      }
+
       await fetchNotes();
-    } catch (error) {
-      console.error("노트 삭제 중 오류 발생:", error);
+    } catch (err) {
+      console.error("노트 삭제 중 오류 발생:", err);
+      setError(`노트 삭제에 실패했습니다: ${err.message}`);
     }
   };
 
@@ -74,20 +100,30 @@ function App() {
     if (!window.confirm("모든 기록을 삭제하시겠습니까?")) return;
 
     try {
-      await fetch(`${SERVER_URL}/notes`, { method: "DELETE" });
+      const response = await fetch(`${SERVER_URL}/notes`, { method: "DELETE" });
+
+      if (!response.ok) {
+        throw new Error(`서버 오류: ${response.status}`);
+      }
+
       await fetchNotes();
-    } catch (error) {
-      console.error("전체 노트 삭제 중 오류 발생:", error);
+    } catch (err) {
+      console.error("전체 노트 삭제 중 오류 발생:", err);
+      setError(`전체 삭제에 실패했습니다: ${err.message}`);
     }
   };
 
-  // Gemini AI 조언 요청 함수 (기존 requestAIAdvice 대체)
-  const requestGeminiAdvice = async (userNote, noteId) => {
-    if (aiRequestInProgress.id) return;
+  // AI 조언 요청. 서버는 Lambda 호출만 하고 DB 저장은 Lambda가 하므로,
+  // 응답이 와도 곧바로 결과가 보이지 않는다. 폴링이 결과를 가져올 때까지 대기 상태를 유지한다.
+  const requestAiAdvice = async (userNote, noteId, aiType) => {
+    if (pendingAi[noteId]) return;
 
-    setAiRequestInProgress({ id: noteId, type: "gemini" });
+    const endpoint = aiType === "gemini" ? "/gemini-notes" : "/nova-notes";
+    const label = aiType === "gemini" ? "Gemini" : "Nova";
+
+    setPendingAi((prev) => ({ ...prev, [noteId]: aiType }));
     try {
-      const response = await fetch(`${SERVER_URL}/gemini-notes`, {
+      const response = await fetch(`${SERVER_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,41 +133,18 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("Gemini 조언 요청 실패");
+        throw new Error(`서버 오류: ${response.status}`);
       }
 
       await fetchNotes();
-    } catch (error) {
-      console.error("Gemini 조언 요청 중 오류 발생:", error);
-    } finally {
-      setAiRequestInProgress({ id: null, type: null });
-    }
-  };
-
-  // Nova AI 조언 요청 함수 (새로 추가)
-  const requestNovaAdvice = async (userNote, noteId) => {
-    if (aiRequestInProgress.id) return;
-
-    setAiRequestInProgress({ id: noteId, type: "nova" });
-    try {
-      const response = await fetch(`${SERVER_URL}/nova-notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: userNote,
-          noteId: noteId,
-        }),
+    } catch (err) {
+      console.error(`${label} 조언 요청 중 오류 발생:`, err);
+      setError(`${label} 조언 요청에 실패했습니다: ${err.message}`);
+      setPendingAi((prev) => {
+        const next = { ...prev };
+        delete next[noteId];
+        return next;
       });
-
-      if (!response.ok) {
-        throw new Error("Nova 조언 요청 실패");
-      }
-
-      await fetchNotes();
-    } catch (error) {
-      console.error("Nova 조언 요청 중 오류 발생:", error);
-    } finally {
-      setAiRequestInProgress({ id: null, type: null });
     }
   };
 
@@ -147,11 +160,35 @@ function App() {
     }
   };
 
+  if (!SERVER_URL) {
+    return (
+      <div className="App">
+        <div className="container">
+          <h1>학습 기록 애플리케이션</h1>
+          <div className="error-banner">
+            <strong>환경변수가 설정되지 않았습니다.</strong>
+            <p>
+              client 디렉토리에 <code>.env</code> 파일을 만들고
+              <code> VITE_SERVER_URL=http://EC2-주소</code> 를 채운 뒤 개발 서버를
+              다시 시작하세요. (<code>.env.example</code> 참고)
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <div className="container">
         <h1>학습 기록 애플리케이션</h1>
         <h3>오늘 학습한 내용을 기록해보세요.</h3>
+
+        {error && (
+          <div className="error-banner">
+            <p>{error}</p>
+          </div>
+        )}
 
         <div className="input-section">
           <textarea
@@ -176,13 +213,12 @@ function App() {
 
         <h2>내 학습 기록</h2>
         <div className="notes-container">
-          {Array.isArray(notes) && notes.length === 0 ? (
+          {notes.length === 0 ? (
             <p className="no-notes">아직 기록된 학습 내용이 없습니다.</p>
           ) : (
-            Array.isArray(notes) &&
             notes.map((note) => {
               const aiInfo = getAIDisplayInfo(note.ai_type);
-              const isRequestingAI = aiRequestInProgress.id === note.id;
+              const pendingType = pendingAi[note.id];
 
               return (
                 <div key={note.id} className="note">
@@ -201,36 +237,32 @@ function App() {
                   )}
 
                   <div className="note-actions">
-                    {!note.ai_note && !isRequestingAI && (
+                    {!note.ai_note && !pendingType && (
                       <div className="ai-buttons">
                         <button
                           onClick={() =>
-                            requestGeminiAdvice(note.user_note, note.id)
+                            requestAiAdvice(note.user_note, note.id, "gemini")
                           }
                           className="secondary-button"
-                          disabled={aiRequestInProgress.id !== null}
                         >
                           Gemini 조언 요청
                         </button>
                         <button
                           onClick={() =>
-                            requestNovaAdvice(note.user_note, note.id)
+                            requestAiAdvice(note.user_note, note.id, "nova")
                           }
                           className="secondary-button"
-                          disabled={aiRequestInProgress.id !== null}
                         >
                           Nova 조언 요청
                         </button>
                       </div>
                     )}
 
-                    {isRequestingAI && (
+                    {pendingType && (
                       <div className="loading-state">
                         <span>
-                          {aiRequestInProgress.type === "gemini"
-                            ? "🤖 Gemini"
-                            : "🌟 Nova"}
-                          가 분석 중입니다...
+                          {pendingType === "gemini" ? "🤖 Gemini" : "🌟 Nova"}가
+                          분석 중입니다... (최대 10초 후 표시됩니다)
                         </span>
                       </div>
                     )}
@@ -238,7 +270,7 @@ function App() {
                     <button
                       onClick={() => deleteNote(note.id)}
                       className="danger-button"
-                      disabled={isRequestingAI}
+                      disabled={Boolean(pendingType)}
                     >
                       삭제
                     </button>

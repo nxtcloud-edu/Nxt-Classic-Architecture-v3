@@ -1,70 +1,31 @@
-# Getting Started with Create React App
+# AI 학습 노트 (서버리스) — 클라이언트
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Vite + React 19로 만든 프론트엔드다.
 
-## Available Scripts
+## 실행
 
-In the project directory, you can run:
+```
+npm install
+cp .env.example .env      # VITE_SERVER_URL을 EC2 주소로 채운다
+npm run dev               # http://localhost:3000
+```
 
-### `npm start`
+프로덕션 빌드는 `npm run build`이며 결과물은 `dist/`에 생성된다.
+빌드 결과를 로컬에서 확인하려면 `npm run preview`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 환경 변수
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+| 이름 | 설명 |
+| --- | --- |
+| `VITE_SERVER_URL` | EC2 서버 주소 (예: `http://13.125.0.1`) |
 
-### `npm test`
+Vite는 `VITE_` 접두사가 붙은 변수만 클라이언트 코드에 노출한다.
+`.env`를 고친 뒤에는 개발 서버를 다시 시작해야 반영된다.
+값이 없으면 앱이 안내 화면을 띄운다.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## AI 응답이 바로 보이지 않는 이유
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+AI 응답은 EC2가 아니라 Lambda가 DB에 직접 저장한다.
+그래서 조언 요청 버튼을 눌러도 응답이 즉시 화면에 나타나지 않고,
+10초 주기 폴링이 DB에서 결과를 가져올 때 표시된다.
+그동안 해당 노트에는 "분석 중" 표시가 남는다.

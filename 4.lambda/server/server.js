@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 const axios = require("axios");
 const cors = require("cors");
 
@@ -11,62 +11,43 @@ const port = 80;
 app.use(cors());
 app.use(express.json());
 
-// 데이터베이스 연결 상태를 저장할 변수
-let dbConnection = null;
+// 데이터베이스 커넥션 풀을 저장할 변수
+let pool = null;
 
 // 데이터베이스 연결 함수
-const connectToDatabase = () => {
-  try {
-    // Lambda URL을 제외한 필수 DB 환경변수만 체크
-    const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"];
-    const missingEnvVars = requiredEnvVars.filter(
-      (envVar) => !process.env[envVar],
+const connectToDatabase = async () => {
+  // Lambda URL을 제외한 필수 DB 환경변수만 체크
+  const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"];
+  const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+  if (missingEnvVars.length > 0) {
+    throw new Error(
+      `필수 데이터베이스 환경변수가 없습니다: ${missingEnvVars.join(", ")}`,
     );
-
-    if (missingEnvVars.length > 0) {
-      console.error(
-        "필수 데이터베이스 환경변수가 없습니다:",
-        missingEnvVars.join(", "),
-      );
-      return null;
-    }
-
-    const connection = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
-
-    return new Promise((resolve, reject) => {
-      connection.connect(async (err) => {
-        if (err) {
-          console.error("데이터베이스 연결 실패:", err);
-          reject(err);
-          return;
-        }
-
-        console.log("데이터베이스 연결 성공");
-
-        try {
-          await createNotesTable(connection);
-          dbConnection = connection;
-          resolve(connection);
-        } catch (error) {
-          reject(error);
-        }
-      });
-    });
-  } catch (error) {
-    console.error("데이터베이스 연결 중 오류:", error);
-    return Promise.reject(error);
   }
+
+  const createdPool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+  });
+
+  // 실제로 연결이 되는지 한 번 확인한다
+  const connection = await createdPool.getConnection();
+  connection.release();
+  console.log("데이터베이스 연결 성공");
+
+  await createNotesTable(createdPool);
+  pool = createdPool;
+  return createdPool;
 };
 
 // notes 테이블 생성 함수 (gemini 추가)
-const createNotesTable = (connection) => {
-  return new Promise((resolve, reject) => {
-    const createTableQuery = `
+const createNotesTable = async (dbPool) => {
+  const createTableQuery = `
             CREATE TABLE IF NOT EXISTS notes (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_note TEXT NOT NULL,
@@ -77,21 +58,13 @@ const createNotesTable = (connection) => {
             )
         `;
 
-    connection.query(createTableQuery, (err, result) => {
-      if (err) {
-        console.error("테이블 생성 중 오류:", err);
-        reject(err);
-        return;
-      }
-      console.log("Notes 테이블 준비 완료");
-      resolve(result);
-    });
-  });
+  await dbPool.query(createTableQuery);
+  console.log("Notes 테이블 준비 완료");
 };
 
 // DB 연결 상태 체크 미들웨어
 const checkDbConnection = (req, res, next) => {
-  if (!dbConnection) {
+  if (!pool) {
     return res.status(503).json({
       error: "데이터베이스 연결 실패",
       message:
@@ -142,7 +115,7 @@ app.get("/", (req, res) => {
   res.json({
     message: "서버 실행 중",
     status: {
-      database: dbConnection ? "연결됨" : "연결 안됨",
+      database: pool ? "연결됨" : "연결 안됨",
       gemini_lambda_url: process.env.GEMINI_LAMBDA_URL ? "설정됨" : "설정 안됨",
       nova_lambda_url: process.env.BEDROCK_LAMBDA_URL ? "설정됨" : "설정 안됨",
     },
@@ -157,73 +130,71 @@ app.post("/notes", checkDbConnection, async (req, res) => {
     return res.status(400).json({ error: "내용을 입력해주세요" });
   }
 
-  const sql = "INSERT INTO notes (user_note) VALUES (?)";
-
-  dbConnection.query(sql, [content], (err, result) => {
-    if (err) {
-      console.error("메모 저장 중 오류:", err);
-      return res.status(500).json({ error: "메모 저장 실패" });
-    }
+  try {
+    const [result] = await pool.execute(
+      "INSERT INTO notes (user_note) VALUES (?)",
+      [content],
+    );
 
     res.status(201).json({
       message: "메모가 저장되었습니다",
       id: result.insertId,
     });
-  });
+  } catch (error) {
+    console.error("메모 저장 중 오류:", error);
+    res.status(500).json({ error: "메모 저장 실패" });
+  }
 });
 
 // 전체 메모 조회
 app.get("/notes", checkDbConnection, async (req, res) => {
-  const sql = "SELECT * FROM notes ORDER BY created_at DESC";
-
-  dbConnection.query(sql, (err, results) => {
-    if (err) {
-      console.error("메모 조회 중 오류:", err);
-      return res.status(500).json({ error: "메모 조회 실패" });
-    }
-    res.json(results);
-  });
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, user_note, ai_note, ai_type, created_at, updated_at FROM notes ORDER BY created_at DESC",
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("메모 조회 중 오류:", error);
+    res.status(500).json({ error: "메모 조회 실패" });
+  }
 });
 
 // 특정 메모 삭제
 app.delete("/notes/:id", checkDbConnection, async (req, res) => {
   const { id } = req.params;
-  const sql = "DELETE FROM notes WHERE id = ?";
 
-  dbConnection.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error("메모 삭제 중 오류:", err);
-      return res.status(500).json({ error: "메모 삭제 실패" });
-    }
+  try {
+    const [result] = await pool.execute("DELETE FROM notes WHERE id = ?", [id]);
 
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ error: "해당 ID의 메모를 찾을 수 없습니다" });
+      return res.status(404).json({ error: "해당 ID의 메모를 찾을 수 없습니다" });
     }
 
     res.json({ message: "메모가 삭제되었습니다" });
-  });
+  } catch (error) {
+    console.error("메모 삭제 중 오류:", error);
+    res.status(500).json({ error: "메모 삭제 실패" });
+  }
 });
 
 // 전체 메모 삭제
 app.delete("/notes", checkDbConnection, async (req, res) => {
-  const sql = "DELETE FROM notes";
-
-  dbConnection.query(sql, (err, result) => {
-    if (err) {
-      console.error("전체 메모 삭제 중 오류:", err);
-      return res.status(500).json({ error: "전체 메모 삭제 실패" });
-    }
+  try {
+    const [result] = await pool.query("DELETE FROM notes");
 
     res.json({
       message: "모든 메모가 삭제되었습니다",
       deletedCount: result.affectedRows,
     });
-  });
+  } catch (error) {
+    console.error("전체 메모 삭제 중 오류:", error);
+    res.status(500).json({ error: "전체 메모 삭제 실패" });
+  }
 });
 
 // Gemini 조언 요청 처리 (GPT에서 변경)
+// AI 응답을 notes 테이블에 저장하는 것은 Lambda의 역할이다.
+// EC2는 Lambda를 호출하고, 결과는 클라이언트 폴링으로 반영된다.
 app.post("/gemini-notes", checkDbConnection, async (req, res) => {
   const { content, noteId } = req.body;
 
@@ -241,20 +212,10 @@ app.post("/gemini-notes", checkDbConnection, async (req, res) => {
 
   try {
     console.log("Gemini Lambda 함수 호출 중...");
-    const aiResponse = await callGeminiLambda(content, noteId);
+    await callGeminiLambda(content, noteId);
     console.log("Gemini Lambda 함수 호출 완료");
 
-    // DB에 AI 응답 저장 (ai_type을 gemini로 변경)
-    const updateSql =
-      "UPDATE notes SET ai_note = ?, ai_type = 'gemini' WHERE id = ?";
-    dbConnection.query(updateSql, [aiResponse, noteId], (err, result) => {
-      if (err) {
-        console.error("AI 응답 저장 중 오류:", err);
-        return res.status(500).json({ error: "AI 응답 저장 실패" });
-      }
-
-      res.json({ message: "Gemini 분석 요청이 처리되었습니다" });
-    });
+    res.json({ message: "Gemini 분석 요청이 처리되었습니다" });
   } catch (error) {
     console.error("Gemini 조언 요청 처리 중 오류:", error);
     res.status(500).json({
@@ -265,6 +226,7 @@ app.post("/gemini-notes", checkDbConnection, async (req, res) => {
 });
 
 // Nova 조언 요청 처리
+// AI 응답을 notes 테이블에 저장하는 것은 Lambda의 역할이다.
 app.post("/nova-notes", checkDbConnection, async (req, res) => {
   const { content, noteId } = req.body;
 
@@ -282,20 +244,10 @@ app.post("/nova-notes", checkDbConnection, async (req, res) => {
 
   try {
     console.log("Nova Lambda 함수 호출 중...");
-    const aiResponse = await callNovaLambda(content, noteId);
+    await callNovaLambda(content, noteId);
     console.log("Nova Lambda 함수 호출 완료");
 
-    // DB에 AI 응답 저장
-    const updateSql =
-      "UPDATE notes SET ai_note = ?, ai_type = 'nova' WHERE id = ?";
-    dbConnection.query(updateSql, [aiResponse, noteId], (err, result) => {
-      if (err) {
-        console.error("AI 응답 저장 중 오류:", err);
-        return res.status(500).json({ error: "AI 응답 저장 실패" });
-      }
-
-      res.json({ message: "Nova 분석 요청이 처리되었습니다" });
-    });
+    res.json({ message: "Nova 분석 요청이 처리되었습니다" });
   } catch (error) {
     console.error("Nova 조언 요청 처리 중 오류:", error);
     res.status(500).json({
@@ -335,9 +287,7 @@ const startServer = async () => {
         }`,
       );
       if (!process.env.GEMINI_LAMBDA_URL || !process.env.BEDROCK_LAMBDA_URL) {
-        console.log(
-          "※ Lambda URL이 설정되지 않은 AI 기능은 사용할 수 없습니다.",
-        );
+        console.log("※ Lambda URL이 설정되지 않은 AI 기능은 사용할 수 없습니다.");
       }
       console.log("=================\n");
     });
