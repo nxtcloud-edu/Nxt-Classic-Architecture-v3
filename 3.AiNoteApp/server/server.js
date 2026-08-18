@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const cors = require("cors");
 
 const app = express();
@@ -14,15 +14,16 @@ app.use(express.json());
 // 데이터베이스 연결 상태를 저장할 변수
 let dbConnection = null;
 
-// Gemini AI 설정
+// Gemini AI 설정 (모델은 GEMINI_MODEL 환경 변수로 교체 가능)
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+
 const configureGemini = () => {
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) {
     console.error("Gemini API 키가 설정되지 않았습니다.");
     return null;
   }
-  const genAI = new GoogleGenerativeAI(geminiKey);
-  return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  return new GoogleGenAI({ apiKey: geminiKey });
 };
 
 // 데이터베이스 연결 함수
@@ -111,7 +112,7 @@ const checkDbConnection = (req, res, next) => {
 
 // Gemini AI 설정 체크 미들웨어
 const checkGeminiConfig = (req, res, next) => {
-  if (!geminiModel) {
+  if (!geminiClient) {
     return res.status(503).json({
       error: "Gemini AI 설정 실패",
       message:
@@ -122,7 +123,7 @@ const checkGeminiConfig = (req, res, next) => {
 };
 
 // Gemini 초기화
-const geminiModel = configureGemini();
+const geminiClient = configureGemini();
 
 // 기본 경로
 app.get("/", (req, res) => {
@@ -130,7 +131,7 @@ app.get("/", (req, res) => {
     message: "서버 실행 중",
     status: {
       database: dbConnection ? "연결됨" : "연결 안됨",
-      gemini: geminiModel ? "설정됨" : "설정 안됨",
+      gemini: geminiClient ? `설정됨 (${GEMINI_MODEL})` : "설정 안됨",
     },
   });
 });
@@ -148,9 +149,11 @@ app.post("/notes", checkDbConnection, checkGeminiConfig, async (req, res) => {
 
 사용자 입력: ${userMessage}`;
 
-    const result = await geminiModel.generateContent(prompt);
-    const response = await result.response;
-    const aiNote = response.text();
+    const response = await geminiClient.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+    });
+    const aiNote = response.text;
 
     const note = {
       user_note: userMessage,
@@ -231,7 +234,9 @@ const startServer = async () => {
       console.log("\n=== 서버 상태 ===");
       console.log(`포트: ${port}`);
       console.log(`데이터베이스 연결: ${dbConnection ? "성공 ✅" : "실패 ❌"}`);
-      console.log(`Gemini AI 설정: ${geminiModel ? "성공 ✅" : "실패 ❌"}`);
+      console.log(
+        `Gemini AI 설정: ${geminiClient ? `성공 ✅ (${GEMINI_MODEL})` : "실패 ❌"}`,
+      );
       console.log("=================\n");
     });
   } catch (error) {

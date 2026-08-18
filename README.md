@@ -145,6 +145,7 @@ DB_USER=your_database_user
 DB_PASSWORD=your_database_password
 DB_NAME=your_database_name
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.5-flash  # 선택: 미설정 시 gemini-3.5-flash
 ```
 
 **백엔드 서버 실행**

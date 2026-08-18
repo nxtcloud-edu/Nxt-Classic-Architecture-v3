@@ -1,11 +1,12 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const mysql = require('mysql2');
 
 exports.handler = async (event) => {
     console.log("EC2 -> Lambda로 전달된 데이터", event.body)
     // 환경 변수에서 Gemini API 키와 데이터베이스 연결 정보를 불러옵니다.
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // 모델은 GEMINI_MODEL 환경 변수로 교체 가능합니다.
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const geminiModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
     
     let inputData;
     try {
@@ -30,9 +31,11 @@ exports.handler = async (event) => {
 
 User input: ${userMessage}`;
         
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const aiResponse = response.text();
+        const response = await genAI.models.generateContent({
+            model: geminiModel,
+            contents: prompt,
+        });
+        const aiResponse = response.text;
         
         console.log("ai 한테 받아왔어?", aiResponse)
 
