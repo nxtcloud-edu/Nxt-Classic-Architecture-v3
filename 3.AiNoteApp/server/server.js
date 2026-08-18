@@ -15,7 +15,7 @@ app.use(express.json());
 let dbPool = null;
 
 // Gemini AI 설정 (모델은 GEMINI_MODEL 환경 변수로 교체 가능)
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 const configureGemini = () => {
   const geminiKey = process.env.GEMINI_API_KEY;

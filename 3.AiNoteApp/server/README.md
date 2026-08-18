@@ -21,7 +21,7 @@ npm install express mysql2 dotenv cors @google/genai
 | `DB_PASSWORD` | MySQL 비밀번호 |
 | `DB_NAME` | 데이터베이스 이름 |
 | `GEMINI_API_KEY` | Gemini API 키 |
-| `GEMINI_MODEL` | 사용할 모델 (기본값 `gemini-3.5-flash`) |
+| `GEMINI_MODEL` | 사용할 모델 (기본값 `gemini-3.6-flash`) |
 
 ## 실행
 

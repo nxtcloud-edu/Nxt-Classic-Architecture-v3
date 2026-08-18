@@ -18,7 +18,7 @@ aws lambda update-function-code --function-name MyFunction --zip-file fileb://in
 | 이름 | 필수 | 설명 |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | 필수 | Google AI Studio에서 발급한 API 키 |
-| `GEMINI_MODEL` | 선택 | 미설정 시 `gemini-3.5-flash` |
+| `GEMINI_MODEL` | 선택 | 미설정 시 `gemini-3.6-flash` |
 | `DB_HOST` | 필수 | RDS 엔드포인트 |
 | `DB_USER` | 필수 | DB 사용자 |
 | `DB_PASSWORD` | 필수 | DB 비밀번호 |

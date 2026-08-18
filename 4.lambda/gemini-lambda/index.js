@@ -20,7 +20,7 @@ exports.handler = async (event) => {
     // 환경 변수에서 Gemini API 키와 데이터베이스 연결 정보를 불러옵니다.
     // 모델은 GEMINI_MODEL 환경 변수로 교체 가능합니다.
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const geminiModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+    const geminiModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
     let inputData;
     try {
