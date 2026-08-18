@@ -65,6 +65,7 @@ const publications = [
   },
 ];
 
+// active: 현재 강조할 항목. 시간이 지나면 직접 옮겨 줘야 한다(자동 갱신되지 않음).
 const timeline = [
   { date: '2026.01', event: '한국 AI 기본법 시행', region: 'KR', active: true },
   { date: '2025.05', event: 'AI Action Summit (파리)', region: 'INTL', active: false },
@@ -80,13 +81,13 @@ const ongoingResearch = [
     title: 'EU AI Act 이행 모니터링 프레임워크 설계',
     status: '진행 중',
     period: '2025.03 -',
-    desc: 'EU AI Act 시행 이후 회원국별 이행 현황을 체계���으로 추적하는 비교 분석 프레임워크를 설계하고, 한국 AI 기본법 시행 대비 시사점을 도출합니다.',
+    desc: 'EU AI Act 시행 이후 회원국별 이행 현황을 체계적으로 추적하는 비교 분석 프레임워크를 설계하고, 한국 AI 기본법 시행 대비 시사점을 도출합니다.',
   },
   {
     title: '공공부문 알고리즘 영향평가 시범 적용',
-    status: '데이터 ��집',
+    status: '데이터 수집',
     period: '2024.09 -',
-    desc: '서울시 AI 기반 복지 서비스 3건을 대상으로 알고리즘 영향평가 시범 적용을 수���하고, 평가 도구의 실효성을 검증합니다.',
+    desc: '서울시 AI 기반 복지 서비스 3건을 대상으로 알고리즘 영향평가 시범 적용을 수행하고, 평가 도구의 실효성을 검증합니다.',
   },
   {
     title: 'AI 생성물 저작권 판례 데이터베이스 구축',
@@ -162,9 +163,11 @@ const regionLabel = { KR: '한국', EU: 'EU', INTL: '국제' };
 export default function App() {
   const [filter, setFilter] = useState('all');
 
+  // 표시 번호는 필터와 무관하게 원본 순번을 쓴다
+  const numberedPubs = publications.map((pub, i) => ({ ...pub, no: i + 1 }));
   const filteredPubs = filter === 'all'
-    ? publications
-    : publications.filter(p => p.type === filter);
+    ? numberedPubs
+    : numberedPubs.filter(p => p.type === filter);
 
   return (
     <div className="min-h-screen bg-surface">
@@ -236,7 +239,7 @@ export default function App() {
         </section>
 
         {/* ── 진행 중인 연구 ── */}
-        <section className="py-16 border-b border-gray-200">
+        <section id="ongoing" className="py-16 border-b border-gray-200">
           <h2 className="font-heading text-3xl font-semibold tracking-tight mb-10">
             진행 중인 연구
           </h2>
@@ -257,13 +260,13 @@ export default function App() {
         </section>
 
         {/* ── 발표 및 세미나 ── */}
-        <section className="py-16 border-b border-gray-200">
+        <section id="presentations" className="py-16 border-b border-gray-200">
           <h2 className="font-heading text-3xl font-semibold tracking-tight mb-10">
             발표 및 세미나
           </h2>
           <div className="space-y-4">
-            {presentations.map((item, i) => (
-              <div key={i} className="flex gap-4 items-baseline">
+            {presentations.map((item) => (
+              <div key={item.title} className="flex gap-4 items-baseline">
                 <span className="font-body text-sm text-muted w-20 flex-shrink-0">{item.date}</span>
                 <div className="flex-1">
                   <h3 className="font-heading text-base font-semibold leading-snug">{item.title}</h3>
@@ -304,11 +307,11 @@ export default function App() {
             </div>
           </div>
           <ol className="space-y-6">
-            {filteredPubs.map((pub, i) => (
-              <li key={i} className="group">
+            {filteredPubs.map((pub) => (
+              <li key={pub.title} className="group">
                 <div className="flex gap-4">
                   <span className="font-heading text-3xl font-bold text-gray-200 group-hover:text-accent transition-colors leading-none select-none">
-                    {String(i + 1).padStart(2, '0')}
+                    {String(pub.no).padStart(2, '0')}
                   </span>
                   <div>
                     <h3 className="font-heading text-lg font-semibold leading-snug mb-1">
@@ -331,7 +334,7 @@ export default function App() {
           </h2>
           <div className="space-y-0">
             {timeline.map((item, i) => (
-              <div key={i} className="flex gap-4 items-start group">
+              <div key={`${item.date}-${item.event}`} className="flex gap-4 items-start group">
                 <div className="flex flex-col items-center">
                   <TimelineDot active={item.active} />
                   {i < timeline.length - 1 && (
@@ -360,8 +363,8 @@ export default function App() {
             학력 및 경력
           </h2>
           <div className="space-y-8">
-            {career.map((item, i) => (
-              <div key={i} className="flex gap-6">
+            {career.map((item) => (
+              <div key={`${item.period}-${item.role}`} className="flex gap-6">
                 <span className="font-body text-sm text-muted w-28 flex-shrink-0 pt-1">
                   {item.period}
                 </span>
@@ -376,7 +379,7 @@ export default function App() {
         </section>
 
         {/* ── 전문 역량 태그 ── */}
-        <section className="py-16 border-b border-gray-200">
+        <section id="skills" className="py-16 border-b border-gray-200">
           <h2 className="font-heading text-3xl font-semibold tracking-tight mb-10">
             전문 분야
           </h2>
