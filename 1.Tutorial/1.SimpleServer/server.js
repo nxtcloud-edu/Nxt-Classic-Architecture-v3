@@ -1,8 +1,8 @@
 const http = require("http");
 
-// 환경 변수에서 username과 port 설정
-const username = "User";
-const port = 8080;
+// 환경 변수에서 username과 port 설정 (없으면 기본값 사용)
+const username = process.env.USERNAME ?? "User";
+const port = process.env.PORT ?? 8080;
 
 const server = http.createServer((req, res) => {
   if (req.url === "/") {

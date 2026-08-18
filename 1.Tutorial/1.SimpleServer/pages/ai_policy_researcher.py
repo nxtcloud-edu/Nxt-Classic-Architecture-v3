@@ -1,3 +1,5 @@
+import random
+
 import streamlit as st
 
 st.title("AI 정책 연구 프로필")
@@ -60,8 +62,8 @@ st.write("---")
 st.write("### AI 정책 타임라인")
 timeline_data = {
     "2024.08": "EU AI Act 발효",
-    "2025.02": "EU AI Act 전면 시행",
     "2025.01": "한국 AI 기본법 국회 통과",
+    "2025.02": "EU AI Act 전면 시행",
     "2026.01": "한국 AI 기본법 시행",
 }
 for date, event in timeline_data.items():
@@ -70,8 +72,6 @@ for date, event in timeline_data.items():
 st.write("---")
 
 if st.button("오늘의 연구 질문", type="primary"):
-    import random
-
     questions = [
         "AI 규제는 혁신을 저해하는가, 촉진하는가?",
         "알고리즘 영향평가의 실효성을 어떻게 측정할 수 있는가?",
