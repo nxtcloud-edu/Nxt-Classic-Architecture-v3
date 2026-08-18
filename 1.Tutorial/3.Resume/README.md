@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# 3.Resume — 인터랙티브 이력서
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React로 만든 1페이지 이력서다. S3에 정적 배포하고, Lambda + DynamoDB로 방문자수·좋아요 카운터를 붙이는 실습(Resume Challenge)의 프론트엔드에 해당한다.
 
-## Available Scripts
+빌드 도구는 Vite, 스타일은 Tailwind CSS, 차트는 Recharts를 쓴다.
 
-In the project directory, you can run:
+## 실행
 
-### `npm start`
+```bash
+npm install
+npm start          # http://localhost:3000
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+배포용 정적 파일 만들기:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm run build      # dist/ 생성
+npm run preview    # 빌드 결과를 로컬에서 확인
+```
 
-### `npm test`
+S3에 배포할 때는 `dist/` 안의 파일을 버킷 루트에 올린다. 방법은 `../2.html/index.html` 튜토리얼을 참고한다.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## LAMBDA_URL 채우기
 
-### `npm run build`
+`src/config.js`의 `LAMBDA_URL`이 비어 있으면 카운터는 네트워크 요청을 보내지 않고 "Lambda URL을 설정하세요"만 표시한다. 앱은 정상 동작하므로, Lambda 없이 이력서만 먼저 배포해도 된다.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+`4.lambda` 실습에서 만든 함수 URL을 넣으면 카운터가 살아난다.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```js
+// src/config.js
+export const LAMBDA_URL = 'https://abc123.lambda-url.ap-northeast-2.on.aws';
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+끝에 슬래시(`/`)는 넣지 않는다. 앱은 이 URL에 세 개의 경로를 호출한다.
 
-### `npm run eject`
+| 메서드 | 경로 | 응답 | 쓰임 |
+|---|---|---|---|
+| GET | `/visit` | `{ "visits": 42 }` | 방문자수 표시 |
+| GET | `/likes` | `{ "likes": 7 }` | 좋아요 수 표시 |
+| POST | `/like` | `{ "likes": 8 }` | 좋아요 버튼 |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+브라우저에서 호출하므로 Lambda 쪽에 **CORS 허용 설정**이 필요하다. 값이 안 뜨면 브라우저 개발자 도구의 콘솔과 네트워크 탭을 먼저 확인한다.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 내 이력서로 바꾸기
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+내용은 전부 `src/data/resume.js` 한 파일에 있다. **이 파일만 고치면 되고 컴포넌트는 건드릴 필요가 없다.**
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| 항목 | 설명 |
+|---|---|
+| `profile` | 이름, 한 줄 소개, 요약 |
+| `contacts` | 연락처. `href`를 빼면 링크가 아닌 텍스트로 표시된다 |
+| `experienceData` | 연도별 성장 추이 (꺾은선 차트) |
+| `projectMix` | 프로젝트 경험 구성비 (도넛 차트). `value` 합이 100이 되게 맞춘다 |
+| `achievements` | 주요 성과 |
+| `education` | 교육 이수 (아코디언) |
+| `projects` | 프로젝트 (아코디언) |
+| `skills` | 기술 태그 |
 
-## Learn More
+브라우저 탭 제목은 `index.html`의 `<title>`에서 바꾼다.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 색 바꾸기
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+색은 전부 `src/index.css` 상단의 CSS 변수로 정의돼 있다. `:root`가 라이트, `.dark`가 다크다. 두 블록의 값만 고치면 앱 전체 색이 따라 바뀐다.
 
-### Code Splitting
+차트 색만 따로 관리한다 — `src/lib/chartPalette.js`. 색맹 사용자도 계열을 구분할 수 있도록 검증된 조합이라, 바꿀 때는 대비를 함께 확인한다.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 구조
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+src/
+  config.js              LAMBDA_URL (학생이 채우는 곳)
+  data/resume.js         이력서 내용 (학생이 고치는 곳)
+  hooks/useCounters.js   Lambda 카운터 호출
+  lib/chartPalette.js    차트 색
+  components/            화면 조각들
+    charts/              Recharts 차트
+  App.jsx                전체 조립
+```
