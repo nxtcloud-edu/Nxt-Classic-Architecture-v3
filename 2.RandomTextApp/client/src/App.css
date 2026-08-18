@@ -25,13 +25,63 @@ h1 {
     letter-spacing: 2px;
 }
 
-h2 {
+h2, blockquote, .message {
     font-size: 1.8em;
     margin: 20px 0;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
     max-width: 800px;
     text-align: center;
     line-height: 1.4;
+}
+
+.quote {
+    margin: 0;
+    max-width: 800px;
+}
+
+.quote figcaption {
+    font-size: 1.2em;
+    text-align: center;
+    opacity: 0.9;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.quote cite {
+    font-style: normal;
+    font-weight: 600;
+}
+
+.message-error {
+    font-size: 1.2em;
+    color: #ffe0e6;
+}
+
+.message-success {
+    font-size: 1.2em;
+    color: #e2ffe9;
+}
+
+.refresh-button {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 28px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 form {
@@ -119,7 +169,7 @@ button[type="submit"]:active {
         font-size: 2em;
     }
     
-    h2 {
+    h2, blockquote, .message {
         font-size: 1.4em;
     }
     
