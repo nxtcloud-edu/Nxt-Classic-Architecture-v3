@@ -71,7 +71,7 @@ const createNotesTable = (connection) => {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_note TEXT NOT NULL,
                 ai_note TEXT,
-                ai_type ENUM('gpt', 'claude', 'gemini', 'nova') DEFAULT NULL,
+                ai_type ENUM('gemini', 'nova') DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
@@ -287,7 +287,7 @@ app.post("/nova-notes", checkDbConnection, async (req, res) => {
 
     // DB에 AI 응답 저장
     const updateSql =
-      "UPDATE notes SET ai_note = ?, ai_type = 'claude' WHERE id = ?";
+      "UPDATE notes SET ai_note = ?, ai_type = 'nova' WHERE id = ?";
     dbConnection.query(updateSql, [aiResponse, noteId], (err, result) => {
       if (err) {
         console.error("AI 응답 저장 중 오류:", err);
