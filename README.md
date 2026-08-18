@@ -45,7 +45,7 @@ Nxt-Classic-Architecture-v3/
 
 ```bash
 cd 1.Tutorial/1.SimpleServer/
-pip install streamlit
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
@@ -64,11 +64,11 @@ node server.js
 ```bash
 cd 1.Tutorial/3.Resume/
 npm install
-npm start
+npm run dev
 ```
 
 - **학습 내용**: React 기반 SPA, 차트 라이브러리 활용
-- **기술 스택**: React, Recharts, Tailwind CSS
+- **기술 스택**: React 19, Vite, Recharts, Tailwind CSS
 - **특징**: 다크모드, 인터랙티브 차트, 반응형 디자인
 
 ### 2️⃣ 랜덤 명언 앱 (`2.RandomTextApp/`)
@@ -110,13 +110,15 @@ npm start
 ```bash
 cd 2.RandomTextApp/client/
 npm install
-# .env 파일에 REACT_APP_SERVER_URL 설정
-npm start
+# .env 파일에 VITE_SERVER_URL 설정
+npm run dev
 ```
+
+> ⚠️ `VITE_SERVER_URL`은 **빌드 시점**에 번들에 포함됩니다. 서버 IP가 바뀌면 `.env` 수정 후 **다시 빌드**해야 반영됩니다.
 
 #### 🔧 기술 스택
 
-- **Frontend**: React, CSS
+- **Frontend**: React 19, Vite, CSS
 - **Backend**: Node.js, Express, MySQL
 - **Database**: MySQL (RDS 권장)
 
@@ -162,12 +164,13 @@ npm start
 ```bash
 cd 3.AiNoteApp/client/
 npm install
-npm start
+# .env 파일에 VITE_SERVER_URL 설정
+npm run dev
 ```
 
 #### 🔧 기술 스택
 
-- **Frontend**: React, CSS
+- **Frontend**: React 19, Vite, CSS
 - **Backend**: Node.js, Express, Google Generative AI
 - **Database**: MySQL (자동 테이블 생성)
 
@@ -206,12 +209,13 @@ npm start
 ```bash
 cd 4.lambda/client/
 npm install
-npm start
+# .env 파일에 VITE_SERVER_URL 설정
+npm run dev
 ```
 
 #### 🔧 기술 스택
 
-- **Frontend**: React
+- **Frontend**: React 19, Vite
 - **Backend**: Node.js, Express
 - **Serverless**: AWS Lambda, Python, Node.js
 - **AI Services**: AWS Bedrock (Nova), Google Gemini
@@ -223,13 +227,27 @@ npm start
 - 서버리스 마이크로서비스 아키텍처
 - 실시간 AI 응답 처리
 
+## 🧨 의도된 학습 장치 (미리 알아두기)
+
+이 레포의 일부 "불편함"은 버그가 아니라 **일부러 남겨둔 학습 지점**입니다.
+
+| 장치 | 겪게 되는 일 | 배우는 것 |
+|---|---|---|
+| 백엔드 포트 80 하드코딩 | Linux에서 `EACCES` 권한 오류 | 1024 미만 포트와 관리자 권한, sudo의 의미 |
+| `VITE_SERVER_URL` 빌드타임 주입 | 서버 IP 변경 후에도 예전 주소로 요청 | 빌드타임 vs 런타임 설정, 재빌드·재배포 절차 |
+| Lambda 기본 타임아웃 3초 | AI 호출이 `Task timed out` 으로 실패 | Lambda 타임아웃 설정과 AI 응답 지연 특성 |
+| `2.RandomTextApp` 서버의 설정 상태 노출 | `GET /` 응답에 DB 설정값이 그대로 보임 | 실습 중 설정 오류 진단(왜 실무에서 위험한지 함께 토론) |
+| Lambda Function URL 인증 NONE | URL만 알면 누구나 호출 가능 | 수업 단순화를 위한 선택 — 인증 강화는 심화 주제 |
+
+**역할 분리 원칙 (4.lambda):** 사용자 노트는 EC2(Express)가 DB에 쓰고, **AI 응답은 Lambda가 직접 DB에 씁니다.** "AI 응답 저장을 EC2로 옮기기", "S3에서 EC2를 거치지 않고 Lambda 직접 호출하기" 등은 개인 과제로 진행합니다.
+
 ## 🛠️ 개발 환경 설정
 
 ### 필수 요구사항
 
-- **Node.js** 14+
-- **Python** 3.8+
-- **MySQL** 5.7+
+- **Node.js** 20+
+- **Python** 3.10+
+- **MySQL** 8.0+
 - **AWS 계정** (Lambda, Bedrock 사용시)
 - **Google Cloud 계정** (Gemini API 사용시)
 
