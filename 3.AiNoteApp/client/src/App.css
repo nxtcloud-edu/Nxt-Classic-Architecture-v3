@@ -239,6 +239,121 @@ button:disabled {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+.error-banner {
+  background: rgba(220, 53, 69, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 4px solid var(--danger-color);
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+}
+
+.error-banner strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.error-banner p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.error-banner code {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.ai-pending p {
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* AI 응답은 마크다운으로 렌더링된다 */
+.markdown-body {
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body p {
+  margin: 0 0 10px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
+.markdown-body li {
+  margin-bottom: 4px;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-size: 1.1em;
+  margin: 14px 0 8px;
+  text-align: left;
+  text-shadow: none;
+}
+
+.markdown-body a {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.markdown-body code {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.markdown-body pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
+  opacity: 0.9;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 10px;
+  text-align: left;
+}
+
 .no-notes {
   text-align: center;
   font-style: italic;

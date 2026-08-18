@@ -1,70 +1,44 @@
-# Getting Started with Create React App
+# AI 학습 노트 — 클라이언트
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 19 + Vite로 만든 프론트엔드다. 백엔드(`../server`)가 먼저 떠 있어야 동작한다.
 
-## Available Scripts
+## 설치
 
-In the project directory, you can run:
+```bash
+npm install
+```
 
-### `npm start`
+## 환경 변수
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+`.env.example`을 `.env`로 복사한 뒤 백엔드 주소를 채운다.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+cp .env.example .env
+```
 
-### `npm test`
+```
+VITE_SERVER_URL=http://localhost
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Vite는 `VITE_` 접두사가 붙은 변수만 노출하며, **값은 빌드 시점에 코드로 주입된다.**
+따라서 주소를 바꾸면 개발 서버를 재시작하거나 다시 빌드해야 한다.
+값이 비어 있으면 화면에 설정 안내가 표시되고 서버 요청은 보내지 않는다.
 
-### `npm run build`
+## 실행
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm run dev      # 개발 서버 (http://localhost:3000)
+npm start        # 위와 동일
+npm run build    # 프로덕션 빌드 → dist/
+npm run preview  # 빌드 결과 미리보기
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+배포할 때는 `dist/` 디렉터리의 내용을 웹 서버(S3, Nginx 등)에 올리면 된다.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 동작 메모
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- 노트를 저장하면 서버가 곧바로 응답하고 AI 분석은 백그라운드에서 진행된다. 분석이 끝나기 전까지
+  해당 노트에는 "AI 분석 중..."이 표시되고, 10초 주기 폴링으로 결과가 도착하면 자동으로 교체된다.
+- AI 분석이 실패해 `ai_note`가 비어 있는 노트에는 "Gemini 조언 요청" 버튼이 나타난다.
+  이 버튼은 `POST /ainotes`로 재요청을 보낸다.
+- AI 응답은 마크다운으로 렌더링된다(`react-markdown` + `remark-gfm`).
