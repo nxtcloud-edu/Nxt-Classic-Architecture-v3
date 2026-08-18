@@ -1,88 +1,670 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS S3 정적 웹사이트 호스팅 튜토리얼</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2, h3 {
-            color: #333;
-        }
-        pre {
-            background: #333;
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS S3 정적 웹사이트 호스팅 튜토리얼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   1계층: 라이트 기본 토큰
+   ============================================================ */
+:root {
+  --bg:            #FAFAFA;
+  --surface:       #FFFFFF;
+  --surface-sunk:  #F4F4F5;
+  --ink:           #09090B;
+  --ink-muted:     #52525B;
+  --ink-faint:     #71717A;
+  --border:        #E4E4E7;
+  --border-strong: #D4D4D8;
+  --accent:        #2563EB;
+  --accent-soft:   #EFF6FF;
+  --warn:          #B45309;
+  --warn-soft:     #FFFBEB;
+  --code-bg:       #18181B;
+  --code-ink:      #E4E4E7;
+
+  --radius:    10px;
+  --radius-sm: 6px;
+  --shadow:    0 1px 2px rgba(9, 9, 11, .05), 0 8px 24px rgba(9, 9, 11, .04);
+
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ============================================================
+   2계층: OS 다크 모드 기본값
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:            #09090B;
+    --surface:       #18181B;
+    --surface-sunk:  #27272A;
+    --ink:           #FAFAFA;
+    --ink-muted:     #A1A1AA;
+    --ink-faint:     #8B8B93;
+    --border:        #27272A;
+    --border-strong: #3F3F46;
+    --accent:        #60A5FA;
+    --accent-soft:   #1E293B;
+    --warn:          #FBBF24;
+    --warn-soft:     #292014;
+    --code-bg:       #000000;
+    --code-ink:      #D4D4D8;
+    --shadow:        0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+  }
+}
+
+/* ============================================================
+   3계층: 토글이 OS 설정을 이긴다
+   ============================================================ */
+:root[data-theme="light"] {
+  --bg:            #FAFAFA;
+  --surface:       #FFFFFF;
+  --surface-sunk:  #F4F4F5;
+  --ink:           #09090B;
+  --ink-muted:     #52525B;
+  --ink-faint:     #71717A;
+  --border:        #E4E4E7;
+  --border-strong: #D4D4D8;
+  --accent:        #2563EB;
+  --accent-soft:   #EFF6FF;
+  --warn:          #B45309;
+  --warn-soft:     #FFFBEB;
+  --code-bg:       #18181B;
+  --code-ink:      #E4E4E7;
+  --shadow:        0 1px 2px rgba(9, 9, 11, .05), 0 8px 24px rgba(9, 9, 11, .04);
+}
+
+:root[data-theme="dark"] {
+  --bg:            #09090B;
+  --surface:       #18181B;
+  --surface-sunk:  #27272A;
+  --ink:           #FAFAFA;
+  --ink-muted:     #A1A1AA;
+  --ink-faint:     #8B8B93;
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+  --accent:        #60A5FA;
+  --accent-soft:   #1E293B;
+  --warn:          #FBBF24;
+  --warn-soft:     #292014;
+  --code-bg:       #000000;
+  --code-ink:      #D4D4D8;
+  --shadow:        0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+}
+
+/* ============================================================
+   베이스
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ============================================================
+   레이아웃 프리미티브 — 간격은 전부 gap
+   ============================================================ */
+.page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.stack      { display: flex; flex-direction: column; gap: 1rem; }
+.stack--sm  { gap: .5rem; }
+.stack--lg  { gap: 1.75rem; }
+.row        { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.row--split { justify-content: space-between; }
+
+/* ============================================================
+   타이포그래피 프리미티브
+   ============================================================ */
+.title {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+
+.lede {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 1.0625rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.prose  { margin: 0; color: var(--ink-muted); }
+.prose strong { color: var(--ink); font-weight: 700; }
+
+.list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--ink-muted);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.kbd,
+.inline-code {
+  padding: .1em .4em;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: .875em;
+  word-break: break-all;
+}
+
+/* ============================================================
+   Card / Step
+   ============================================================ */
+.card {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: .875rem;
+}
+
+.step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: .875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ============================================================
+   Callout — 정보 / 주의
+   ============================================================ */
+.callout {
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--ink-muted);
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  font-size: .9375rem;
+}
+
+.callout__label {
+  color: var(--accent);
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.callout--warn {
+  border-left-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.callout--warn .callout__label { color: var(--warn); }
+
+/* ============================================================
+   Code block — 넓은 콘텐츠는 자체 가로 스크롤
+   ============================================================ */
+.code {
+  margin: 0;
+  padding: 1rem 1.125rem;
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--code-ink);
+  font-family: var(--font-mono);
+  font-size: .8125rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+/* ============================================================
+   Badge
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .125rem .5rem;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink-muted);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+/* ============================================================
+   Theme toggle — 구조 요소이므로 전용 클래스로 완결
+   ============================================================ */
+.theme-toggle {
+  padding: .5rem .875rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: .8125rem;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}
+
+/* ============================================================
+   Divider / Footer
+   ============================================================ */
+.divider {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--border);
+}
+
+.footer {
+  color: var(--ink-faint);
+  font-size: .875rem;
+  text-align: center;
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>AWS S3를 사용하여 정적 웹사이트 호스팅하기</h1>
-        <p>AWS S3를 사용하여 정적 웹사이트를 호스팅하는 방법을 따라해 보세요:</p>
-        
-        <h2>1단계: S3 버킷 생성</h2>
-        <p>
-            AWS 관리 콘솔로 이동하여 S3로 이동합니다. "버킷 만들기"를 클릭하고 새 S3 버킷을 생성하는 지침을 따릅니다. 버킷 이름이 전 세계적으로 고유해야 합니다.
-        </p>
-        
-        <h2>2단계: 정적 웹사이트 호스팅 활성화</h2>
-        <p>
-            버킷을 생성한 후 버킷 이름을 클릭하여 설정을 엽니다. "속성" 탭으로 이동하여 "정적 웹사이트 호스팅"을 활성화합니다. 인덱스 문서로 "index.html"을 지정합니다.
-        </p>
 
-        <h2>3단계: 퍼블릭 차단 해제</h2>
-        <p>
-            "퍼블릭 액세스 차단" 설정이 비활성화되어 있는지 확인하세요. 이 설정은 "권한" 탭에서 찾을 수 있습니다.
-        </p>
-        
-        <h2>4단계: 버킷 정책 업데이트</h2>
-        <p>
-            웹사이트에 대한 공개 액세스를 허용하려면 버킷 정책을 업데이트해야 합니다. "권한" 탭으로 이동하여 "버킷 정책"을 클릭합니다. 다음 정책을 사용하여 공개 읽기 액세스를 허용합니다:
-        </p>
-        <pre>
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::your-bucket-name/*"
-        }
-    ]
-}
-        </pre>
-        <p><code>your-bucket-name</code>을 S3 버킷 이름으로 바꾸세요.</p>
-        
-        <h2>5단계: index.html 파일 업로드</h2>
-        <p>
-            <code>index.html</code> 파일을 S3 버킷의 루트에 업로드합니다. S3 콘솔에서 "업로드" 버튼을 사용하여 업로드할 수 있습니다.
-        </p>
+<div class="page">
 
-        <h2>6단계: 웹사이트 접근</h2>
-        <p>
-            파일을 업로드하고 설정을 구성한 후에는 "속성" 탭의 "정적 웹사이트 호스팅" 섹션에서 제공된 엔드포인트를 사용하여 정적 웹사이트에 접근할 수 있습니다.
-        </p>
-        
-        <h3>축하합니다!</h3>
-        <p>이제 정적 웹사이트가 라이브 상태가 되었습니다. URL을 다른 사람과 공유하고 호스팅된 콘텐츠를 확인할 수 있습니다.</p>
+  <!-- ── 헤더 ── -->
+  <header class="stack">
+    <div class="row row--split">
+      <p class="eyebrow">AWS Tutorial 02</p>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+        다크 모드
+      </button>
     </div>
+    <h1 class="title">S3로 정적 웹사이트 호스팅하기</h1>
+    <p class="lede">
+      HTML 파일 하나를 인터넷에 공개하는 가장 단순한 방법이다.
+      서버를 한 대도 띄우지 않고, AWS 콘솔에서 클릭 몇 번으로 배포한다.
+    </p>
+    <div class="row">
+      <span class="badge">소요 15분</span>
+      <span class="badge">AWS 콘솔</span>
+      <span class="badge">서버 불필요</span>
+    </div>
+  </header>
+
+  <hr class="divider">
+
+  <!-- ── 준비물 ── -->
+  <section class="card">
+    <h2 class="section-title">시작하기 전에</h2>
+    <ul class="list">
+      <li>로그인 가능한 <strong>AWS 계정</strong></li>
+      <li>업로드할 <span class="inline-code">index.html</span> 파일 (이 페이지 파일을 그대로 써도 된다)</li>
+      <li>작업할 <strong>리전</strong>을 하나 정해 둔다 — 이 실습은 서울 리전 <span class="inline-code">ap-northeast-2</span> 기준이다</li>
+    </ul>
+    <div class="callout">
+      <span class="callout__label">이 실습의 방침</span>
+      <p class="prose">
+        여기서는 버킷을 <strong>퍼블릭</strong>으로 열어 배포한다.
+        S3가 어떻게 웹사이트를 서빙하는지 가장 적은 단계로 보여 주기 위해서다.
+        실무 배포 방식은 마지막 이론 섹션에서 따로 다룬다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 단계별 실습 ── -->
+  <section class="stack stack--lg">
+    <h2 class="section-title">단계별 실습</h2>
+
+    <!-- 1단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">1</span>
+        <h3 class="step-title">S3 버킷 만들기</h3>
+      </div>
+      <p class="prose">
+        AWS 콘솔 상단 검색창에 <strong>S3</strong>를 입력해 이동한 뒤
+        <strong>[버킷 만들기]</strong>를 누른다. 리전이 <span class="inline-code">아시아 태평양(서울)</span>인지 확인한다.
+      </p>
+      <div class="callout callout--warn">
+        <span class="callout__label">버킷 이름 규칙 — 여기서 가장 많이 막힌다</span>
+        <ul class="list">
+          <li><strong>전 세계에서 유일</strong>해야 한다. 이미 남이 쓰는 이름은 만들 수 없다.</li>
+          <li><strong>영문 소문자·숫자·하이픈(-)·마침표(.)만</strong> 쓸 수 있다.
+              <strong>대문자와 밑줄(_)은 불가</strong>다.</li>
+          <li>3자 이상 63자 이하, 시작과 끝은 소문자 또는 숫자여야 한다.</li>
+          <li>IP 주소 형태(<span class="inline-code">192.168.0.1</span>)는 쓸 수 없다.</li>
+        </ul>
+        <p class="prose">
+          권장 형태: <span class="inline-code">이름-학번-s3</span> →
+          <span class="inline-code">hong-2024001-s3</span>
+        </p>
+      </div>
+      <p class="prose">
+        나머지 설정은 기본값 그대로 두고 <strong>[버킷 만들기]</strong>로 생성을 마친다.
+      </p>
+    </article>
+
+    <!-- 2단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">2</span>
+        <h3 class="step-title">퍼블릭 액세스 차단 해제</h3>
+      </div>
+      <p class="prose">
+        새 버킷은 기본적으로 모든 공개 접근이 막혀 있다. 웹사이트로 쓰려면 이 잠금을 풀어야 한다.
+      </p>
+      <ul class="list">
+        <li>방금 만든 버킷 이름을 클릭해 들어간다.</li>
+        <li><strong>[권한]</strong> 탭 → <strong>[퍼블릭 액세스 차단(버킷 설정)]</strong>의 <strong>[편집]</strong>을 누른다.</li>
+        <li><strong>모든 퍼블릭 액세스 차단</strong> 체크를 <strong>해제</strong>하고 저장한다.</li>
+        <li>확인창에 <span class="inline-code">확인</span>을 입력해 승인한다.</li>
+      </ul>
+      <div class="callout callout--warn">
+        <span class="callout__label">주의</span>
+        <p class="prose">
+          이 순간부터 이 버킷에 올린 파일은 인터넷 누구나 볼 수 있다.
+          <strong>개인정보·자격 증명·과제 원본 같은 파일은 절대 올리지 않는다.</strong>
+        </p>
+      </div>
+    </article>
+
+    <!-- 3단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">3</span>
+        <h3 class="step-title">버킷 정책으로 읽기 권한 부여</h3>
+      </div>
+      <p class="prose">
+        차단을 푼 것만으로는 부족하다. "누가 무엇을 할 수 있는지"를 <strong>버킷 정책</strong>으로 명시해야 한다.
+      </p>
+      <ul class="list">
+        <li><strong>[권한]</strong> 탭 → <strong>[버킷 정책]</strong>의 <strong>[편집]</strong>을 누른다.</li>
+        <li>아래 JSON을 붙여넣고, <span class="inline-code">your-bucket-name</span>을 <strong>내 버킷 이름</strong>으로 바꾼다.</li>
+      </ul>
+      <pre class="code">{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::your-bucket-name/*"
+    }
+  ]
+}</pre>
+      <div class="callout">
+        <span class="callout__label">읽는 법</span>
+        <ul class="list">
+          <li><span class="inline-code">"Principal": "*"</span> — 누구나(익명 사용자 포함)</li>
+          <li><span class="inline-code">"Action": "s3:GetObject"</span> — 객체를 <strong>읽는 것만</strong> 허용. 업로드·삭제는 불가</li>
+          <li><span class="inline-code">Resource</span> 끝의 <span class="inline-code">/*</span> — 버킷 <strong>안의 모든 객체</strong>가 대상. 이 <span class="inline-code">/*</span>를 빼먹으면 정책이 동작하지 않는다</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 4단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">4</span>
+        <h3 class="step-title">정적 웹사이트 호스팅 활성화</h3>
+      </div>
+      <ul class="list">
+        <li><strong>[속성]</strong> 탭으로 이동해 맨 아래 <strong>[정적 웹 사이트 호스팅]</strong>의 <strong>[편집]</strong>을 누른다.</li>
+        <li><strong>활성화</strong>를 선택한다.</li>
+        <li>호스팅 유형은 <strong>정적 웹 사이트 호스팅</strong>을 고른다.</li>
+        <li><strong>인덱스 문서</strong>에 <span class="inline-code">index.html</span>을 입력한다.</li>
+        <li>오류 문서는 비워 두어도 되고, <span class="inline-code">error.html</span>을 넣어도 된다.</li>
+      </ul>
+      <p class="prose">
+        저장하면 <strong>버킷 웹 사이트 엔드포인트</strong> 주소가 생긴다. 6단계에서 다시 확인한다.
+      </p>
+    </article>
+
+    <!-- 5단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">5</span>
+        <h3 class="step-title">index.html 업로드</h3>
+      </div>
+      <ul class="list">
+        <li><strong>[객체]</strong> 탭 → <strong>[업로드]</strong> → <strong>[파일 추가]</strong>를 누른다.</li>
+        <li><span class="inline-code">index.html</span>을 선택하고 <strong>[업로드]</strong>를 누른다.</li>
+        <li>파일은 반드시 <strong>버킷 최상위(루트)</strong>에 있어야 한다. 폴더 안에 넣으면 인덱스 문서로 인식되지 않는다.</li>
+      </ul>
+      <p class="prose">
+        CSS·이미지 등 다른 파일이 있다면 <strong>HTML에서 참조하는 경로 구조 그대로</strong> 함께 올린다.
+      </p>
+    </article>
+
+    <!-- 6단계 -->
+    <article class="step">
+      <div class="row">
+        <span class="step__num">6</span>
+        <h3 class="step-title">엔드포인트로 접속 확인</h3>
+      </div>
+      <ul class="list">
+        <li><strong>[속성]</strong> 탭 → <strong>[정적 웹 사이트 호스팅]</strong> 섹션의 링크를 클릭한다.</li>
+        <li>주소 형식은 다음과 같다.</li>
+      </ul>
+      <pre class="code">http://버킷이름.s3-website.ap-northeast-2.amazonaws.com</pre>
+      <div class="callout">
+        <span class="callout__label">잘 안 될 때</span>
+        <ul class="list">
+          <li><strong>403 Forbidden</strong> — 2단계 차단 해제 또는 3단계 버킷 정책을 다시 확인한다.
+              정책의 <span class="inline-code">Resource</span>에 버킷 이름이 정확히 들어갔는지, 끝에 <span class="inline-code">/*</span>가 있는지 본다.</li>
+          <li><strong>404 Not Found</strong> — 파일 이름이 <span class="inline-code">index.html</span>이 맞는지,
+              루트에 있는지, 4단계에 입력한 인덱스 문서 이름과 같은지 본다.</li>
+          <li><strong>주소가 https로 열리지 않음</strong> — 정상이다. S3 웹사이트 엔드포인트는 <span class="inline-code">http</span>만 지원한다.
+              HTTPS는 아래 이론 섹션의 CloudFront가 필요하다.</li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── 완료 ── -->
+  <section class="card">
+    <h2 class="section-title">완료</h2>
+    <p class="prose">
+      이제 내 웹사이트가 인터넷에 공개됐다. 주소를 공유하면 누구나 접속할 수 있다.
+      <span class="inline-code">index.html</span>을 고쳐서 다시 업로드하면 즉시 반영된다.
+    </p>
+    <div class="callout callout--warn">
+      <span class="callout__label">실습이 끝나면</span>
+      <p class="prose">
+        비용과 노출을 줄이기 위해 <strong>버킷의 객체를 모두 삭제한 뒤 버킷을 삭제</strong>한다.
+        S3는 버킷이 비어 있어야 삭제된다.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── 이론: CloudFront + OAC ── -->
+  <section class="stack stack--lg">
+    <div class="stack stack--sm">
+      <p class="eyebrow">이론 · 실습 없음</p>
+      <h2 class="section-title">실무에서는: CloudFront + OAC</h2>
+      <p class="prose">
+        방금 한 방식은 배우기엔 좋지만 <strong>실제 서비스에는 쓰지 않는다.</strong>
+        실무에서는 S3 버킷을 <strong>비공개로 두고</strong>, 그 앞에 CDN인
+        <strong>CloudFront</strong>를 세운다. 여기서는 개념만 이해하고 넘어간다 —
+        <strong>이 섹션에 실습 단계는 없다.</strong>
+      </p>
+    </div>
+
+    <article class="card">
+      <h3 class="step-title">퍼블릭 버킷의 문제</h3>
+      <ul class="list">
+        <li><strong>버킷 주소가 그대로 노출된다.</strong> 누구나 S3 엔드포인트에 직접 접근할 수 있고,
+            정책을 한 줄만 잘못 쓰면 의도치 않은 파일까지 공개된다.</li>
+        <li><strong>HTTPS를 쓸 수 없다.</strong> S3 웹사이트 엔드포인트는 http 전용이라
+            브라우저가 "안전하지 않음"으로 표시한다. 커스텀 도메인 인증서도 붙일 수 없다.</li>
+        <li><strong>매 요청이 S3까지 간다.</strong> 캐시가 없으니 같은 파일을 만 번 요청하면
+            만 번 모두 S3 요청 요금과 전송 요금이 발생하고, 멀리 있는 사용자일수록 느리다.</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3 class="step-title">CloudFront가 바꾸는 것</h3>
+      <ul class="list">
+        <li><strong>비공개 버킷 유지</strong> — 퍼블릭 액세스 차단을 켜 둔 채로 배포한다.
+            버킷 정책은 <span class="inline-code">Principal: "*"</span> 대신
+            <strong>특정 CloudFront 배포에만</strong> 읽기를 허용한다. 사용자는 S3 주소를 알 수도, 쓸 수도 없다.</li>
+        <li><strong>HTTPS 기본 제공</strong> — CloudFront 도메인은 처음부터 https다.
+            ACM 인증서를 붙이면 내 도메인에도 무료로 HTTPS를 적용할 수 있다.</li>
+        <li><strong>엣지 캐싱</strong> — 전 세계 엣지 로케이션이 파일을 복사해 두고 대신 응답한다.
+            사용자에게 가까운 곳에서 응답하니 빠르고, S3까지 도달하는 요청 수가 줄어 비용도 내려간다.</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3 class="step-title">OAC(Origin Access Control)란</h3>
+      <p class="prose">
+        "비공개 버킷인데 CloudFront는 어떻게 읽지?"에 대한 답이 <strong>OAC</strong>다.
+        CloudFront가 S3에 요청을 보낼 때 <strong>서명된 신원</strong>을 함께 붙이고,
+        버킷 정책은 그 신원만 통과시킨다. 결과적으로
+        <strong>정문(CloudFront)은 열려 있고 뒷문(S3)은 잠겨 있는</strong> 구조가 된다.
+      </p>
+      <div class="callout">
+        <span class="callout__label">요청 흐름</span>
+        <p class="prose">
+          브라우저 → <strong>CloudFront 엣지</strong> → (캐시에 있으면 여기서 바로 응답)
+          → 없으면 OAC 서명을 붙여 <strong>비공개 S3 버킷</strong>에서 원본을 가져온 뒤 캐시에 저장하고 응답
+        </p>
+      </div>
+      <p class="prose">
+        예전에는 같은 목적으로 <strong>OAI(Origin Access Identity)</strong>를 썼다.
+        지금은 OAC가 후속 방식이며, 신규 배포에는 OAC를 쓰는 것이 권장된다.
+      </p>
+    </article>
+
+    <article class="card">
+      <h3 class="step-title">정리</h3>
+      <ul class="list">
+        <li><strong>학습·프로토타입</strong> — 이 문서의 퍼블릭 S3 방식. 단계가 적고 결과를 바로 본다.</li>
+        <li><strong>실제 서비스</strong> — 비공개 S3 + CloudFront + OAC. 보안·HTTPS·성능·비용을 한 번에 해결한다.</li>
+      </ul>
+      <p class="prose">
+        CloudFront 실습은 뒤쪽 수업에서 다룬다. 지금은 <strong>"퍼블릭 버킷은 실습용"</strong>이라는 것만 기억하면 된다.
+      </p>
+    </article>
+  </section>
+
+  <hr class="divider">
+
+  <footer class="footer">
+    <p class="prose">AWS 3-Tier Architecture 수업 · 1.Tutorial / 2.html</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+
+  function isDark() {
+    var set = root.getAttribute('data-theme');
+    if (set) return set === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function render() {
+    var dark = isDark();
+    toggle.textContent = dark ? '라이트 모드' : '다크 모드';
+    toggle.setAttribute('aria-pressed', String(dark));
+  }
+
+  toggle.addEventListener('click', function () {
+    root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+    render();
+  });
+
+  render();
+})();
+</script>
+
 </body>
 </html>

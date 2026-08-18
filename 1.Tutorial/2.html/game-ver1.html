@@ -169,13 +169,14 @@ document.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
 // 마우스/터치 입력
 canvas.addEventListener('mousemove', (e) => {
-  if (gameOver) return;
+  // 시작 버튼을 누르기 전에는 player가 아직 없다
+  if (!player || gameOver) return;
   const rect = canvas.getBoundingClientRect();
   player.x = e.clientX - rect.left - player.w / 2;
 });
 
 canvas.addEventListener('touchmove', (e) => {
-  if (gameOver) return;
+  if (!player || gameOver) return;
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   player.x = e.touches[0].clientX - rect.left - player.w / 2;
