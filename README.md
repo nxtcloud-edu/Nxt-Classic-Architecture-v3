@@ -1,4 +1,4 @@
-# Nxt-Classic-Architecture-v2
+# Nxt-Classic-Architecture-v3
 
 ## 📚 프로젝트 개요
 
@@ -16,11 +16,12 @@
 ## 📁 프로젝트 구조
 
 ```
-Nxt-Classic-Architecture-v2/
+Nxt-Classic-Architecture-v3/
 ├── 1.Tutorial/              # 기초 튜토리얼
 │   ├── 1.SimpleServer/      # 간단한 서버 구현
 │   ├── 2.html/             # 정적 웹페이지
-│   └── 3.Resume/           # React 기반 이력서 앱
+│   ├── 3.Resume/           # React 기반 이력서 앱
+│   └── 4.ResearcherProfile/ # React 기반 연구원 프로필 앱
 ├── 2.RandomTextApp/        # 3티어 랜덤 명언 앱
 ├── 3.AiNoteApp/           # 3티어 AI 노트 앱
 └── 4.lambda/              # 서버리스 아키텍처
