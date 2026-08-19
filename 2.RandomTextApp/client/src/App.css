@@ -523,6 +523,243 @@ body {
   font-size: 0.8125rem;
 }
 
+/* ─────────────────────────────────────────────
+   헤더 바 (테마 토글 자리)
+   ───────────────────────────────────────────── */
+.page-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* ─────────────────────────────────────────────
+   프리미티브 · 작은 버튼
+   ───────────────────────────────────────────── */
+.btn--sm {
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────
+   티어 상태 인디케이터
+   ───────────────────────────────────────────── */
+.tier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tier__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.375rem 0.6875rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--surface);
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.tier__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--fg-subtle);
+}
+
+.tier__pill.is-ok {
+  border-color: var(--ok-line);
+  color: var(--ok);
+}
+
+.tier__pill.is-ok .tier__dot {
+  background-color: var(--ok);
+}
+
+.tier__pill.is-down {
+  border-color: var(--err-line);
+  color: var(--err);
+}
+
+.tier__pill.is-down .tier__dot {
+  background-color: var(--err);
+}
+
+/* ─────────────────────────────────────────────
+   명언 카드 액션 (복사)
+   ───────────────────────────────────────────── */
+.quote__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* ─────────────────────────────────────────────
+   폼 · 글자 수 카운터와 검증 안내
+   ───────────────────────────────────────────── */
+.field__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.counter {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-subtle);
+}
+
+.counter--over {
+  color: var(--err);
+  font-weight: 600;
+}
+
+.field__error {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--err);
+}
+
+/* ─────────────────────────────────────────────
+   패널 (목록 섹션)
+   ───────────────────────────────────────────── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.panel__count {
+  font-size: 0.8125rem;
+  color: var(--fg-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+/* 로컬 저장이라는 점을 눈에 띄게 알리는 안내 */
+.panel__note--warn {
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+}
+
+/* ─────────────────────────────────────────────
+   목록
+   ───────────────────────────────────────────── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.list__item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+}
+
+/* 지우기 버튼이 있는 행은 좌우 배치 */
+.list__item--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+}
+
+/* 방금 저장된 항목 하이라이트 */
+.list__item.is-new {
+  border-color: var(--ok-line);
+  background-color: var(--ok-bg);
+}
+
+/* 항목 전체가 버튼인 경우 (다시 보기) */
+.list__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.list__pick:hover {
+  background-color: var(--primary-weak);
+}
+
+.list__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.list__text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fg);
+  overflow-wrap: break-word;
+}
+
+.list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+.badge {
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background-color: var(--ok);
+  color: var(--surface);
+  font-size: 0.6875rem;
+  font-style: normal;
+  font-weight: 600;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
