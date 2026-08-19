@@ -28,7 +28,7 @@ S3에 배포할 때는 `dist/` 안의 파일을 버킷 루트에 올린다. 방�
 
 ```js
 // src/config.js
-export const LAMBDA_URL = 'https://abc123.lambda-url.ap-northeast-2.on.aws';
+export const LAMBDA_URL = 'https://abc123.lambda-url.us-east-1.on.aws';
 ```
 
 끝에 슬래시(`/`)는 넣지 않는다. 앱은 이 URL에 세 개의 경로를 호출한다.
