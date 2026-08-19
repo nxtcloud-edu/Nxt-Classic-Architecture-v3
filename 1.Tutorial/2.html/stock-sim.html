@@ -95,6 +95,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* .layout/.page의 display 선언이 UA의 [hidden] 규칙을 덮어쓰지 않도록 고정 */
+[hidden] { display: none !important; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
@@ -169,7 +171,7 @@ body {
 .num--flat { color: var(--fg-muted); font-weight: 700; }
 
 /* ============================================================
-   레이아웃
+   상단바 + 탭
    ============================================================ */
 .topbar {
   position: sticky; top: 0; z-index: 10;
@@ -192,14 +194,44 @@ body {
 .topbar__asset { display: flex; flex-direction: column; align-items: flex-end; }
 .topbar__asset-label { font-size: 0.7rem; color: var(--fg-subtle); }
 .topbar__asset-value { font-size: 0.95rem; font-weight: 800; }
+.tabs {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px clamp(16px, 4vw, 32px) 0;
+  display: flex; gap: 8px;
+  overflow-x: auto;
+}
+.tab {
+  font: inherit; font-weight: 700; font-size: 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-muted);
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.tab:hover { background: var(--surface-2); color: var(--fg); }
+.tab[aria-current="true"] { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+
+/* ============================================================
+   레이아웃
+   ============================================================ */
 .layout {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 24px clamp(16px, 4vw, 32px) 48px;
+  padding: 20px clamp(16px, 4vw, 32px) 48px;
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+}
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px clamp(16px, 4vw, 32px) 48px;
+  display: flex; flex-direction: column; gap: 20px;
 }
 .stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 @media (max-width: 880px) {
@@ -283,6 +315,13 @@ body {
 .asset { display: flex; flex-direction: column; gap: 2px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; }
 .asset__label { font-size: 0.72rem; color: var(--fg-subtle); }
 .asset__value { font-size: 1.02rem; font-weight: 800; letter-spacing: -0.01em; }
+.alloc { display: flex; flex-direction: column; gap: 10px; }
+.alloc__row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 0.83rem; }
+.alloc__label { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alloc__bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.alloc__fill { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+.alloc__fill--cash { background: var(--fg-subtle); }
+.alloc__pct { color: var(--fg-muted); font-weight: 700; white-space: nowrap; }
 .tbl-scroll { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
 th { text-align: right; font-weight: 600; color: var(--fg-subtle); font-size: 0.75rem; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -294,6 +333,31 @@ tr:last-child td { border-bottom: none; }
 .trades li { display: flex; gap: 10px; align-items: center; }
 .trades time { color: var(--fg-subtle); font-size: 0.75rem; flex: none; }
 .trades .chip { flex: none; }
+
+/* ============================================================
+   시장 / 뉴스
+   ============================================================ */
+.index-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; }
+.index-head__value { font-size: clamp(1.5rem, 4vw, 1.9rem); font-weight: 800; letter-spacing: -0.02em; }
+.market-summary { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.82rem; color: var(--fg-muted); }
+.market-summary strong { color: var(--fg); }
+.rank-row { cursor: pointer; }
+.rank-row:hover td { background: var(--surface-2); }
+.rank-row td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.rank-row td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+.news { list-style: none; display: flex; flex-direction: column; }
+.news__item {
+  font: inherit; text-align: left; width: 100%;
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--fg); cursor: pointer;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 4px;
+  transition: background 0.15s ease;
+}
+.news__item:hover { background: var(--surface-2); }
+li:last-child > .news__item { border-bottom: none; }
+.news__title { font-weight: 700; font-size: 0.95rem; letter-spacing: -0.01em; }
+.news__meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 0.75rem; color: var(--fg-subtle); }
 footer { text-align: center; font-size: 0.75rem; color: var(--fg-subtle); padding: 0 16px 40px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -319,7 +383,16 @@ footer { text-align: center; font-size: 0.75rem; color: var(--fg-subtle); paddin
   <button class="btn btn--ghost" id="themeBtn" type="button" aria-label="테마 전환">🌓</button>
 </header>
 
-<main class="layout">
+<nav class="tabs" aria-label="주요 메뉴">
+  <button class="tab" id="tab-trade" type="button" aria-current="true">📈 트레이딩</button>
+  <button class="tab" id="tab-assets" type="button" aria-current="false">💼 내 자산</button>
+  <button class="tab" id="tab-market" type="button" aria-current="false">🏆 시장</button>
+  <button class="tab" id="tab-news" type="button" aria-current="false">📰 뉴스</button>
+</nav>
+
+<main>
+<!-- ==================== 탭 1: 트레이딩 ==================== -->
+<section class="layout" id="panel-trade" aria-label="트레이딩">
   <aside class="card">
     <h2 class="card__title">관심종목</h2>
     <ul class="watch" id="watchlist"></ul>
@@ -353,46 +426,96 @@ footer { text-align: center; font-size: 0.75rem; color: var(--fg-subtle); paddin
         <p class="order__msg" id="orderMsg" role="status" aria-live="polite"></p>
       </div>
     </section>
-
-    <section class="card" aria-label="내 자산">
-      <h2 class="card__title">내 자산</h2>
-      <div class="assets">
-        <div class="asset"><span class="asset__label">현금</span><span class="asset__value" id="aCash"></span></div>
-        <div class="asset"><span class="asset__label">주식 평가금액</span><span class="asset__value" id="aStock"></span></div>
-        <div class="asset"><span class="asset__label">총자산</span><span class="asset__value" id="aTotal"></span></div>
-        <div class="asset"><span class="asset__label">총수익률</span><span class="asset__value" id="aReturn"></span></div>
-      </div>
-      <div class="tbl-scroll">
-        <table id="holdTable">
-          <thead><tr><th>종목</th><th>수량</th><th>평균단가</th><th>현재가</th><th>평가손익</th><th>수익률</th></tr></thead>
-          <tbody id="holdBody"></tbody>
-        </table>
-      </div>
-      <p class="tbl-empty" id="holdEmpty">아직 보유한 종목이 없습니다. 첫 매수를 해보세요!</p>
-    </section>
-
-    <section class="card" aria-label="최근 체결">
-      <h2 class="card__title">최근 체결</h2>
-      <ul class="trades" id="tradeList"></ul>
-      <p class="tbl-empty" id="tradeEmpty">체결 내역이 없습니다.</p>
-    </section>
-
-    <section class="callout">
-      <strong>📚 이 페이지는 교육용 데모입니다</strong>
-      <span>시세는 실제 주가가 아니라 <strong>이 브라우저의 자바스크립트가 무작위로 생성</strong>하는 값이고,
-      포트폴리오는 <strong>이 브라우저(localStorage)에만</strong> 저장됩니다.
-      진짜 서비스가 되려면 실시간 시세를 주는 <strong>서버(애플리케이션 티어)</strong>와
-      계좌를 저장하는 <strong>데이터베이스(데이터 티어)</strong>가 필요합니다 — 다음 실습에서 만듭니다.</span>
-      <div class="order__row">
-        <button class="btn btn--ghost" id="resetBtn" type="button">포트폴리오 초기화</button>
-        <button class="btn btn--buy" id="resetYes" type="button" hidden>정말 초기화</button>
-        <button class="btn btn--ghost" id="resetNo" type="button" hidden>취소</button>
-      </div>
-    </section>
   </div>
+</section>
+
+<!-- ==================== 탭 2: 내 자산 ==================== -->
+<section class="page" id="panel-assets" aria-label="내 자산" hidden>
+  <section class="card">
+    <h2 class="card__title">내 자산</h2>
+    <div class="assets">
+      <div class="asset"><span class="asset__label">현금</span><span class="asset__value" id="aCash"></span></div>
+      <div class="asset"><span class="asset__label">주식 평가금액</span><span class="asset__value" id="aStock"></span></div>
+      <div class="asset"><span class="asset__label">총자산</span><span class="asset__value" id="aTotal"></span></div>
+      <div class="asset"><span class="asset__label">총수익률</span><span class="asset__value" id="aReturn"></span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">자산 구성</h2>
+    <div class="alloc" id="alloc"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">보유 종목</h2>
+    <div class="tbl-scroll">
+      <table id="holdTable">
+        <thead><tr><th>종목</th><th>수량</th><th>평균단가</th><th>현재가</th><th>평가손익</th><th>수익률</th></tr></thead>
+        <tbody id="holdBody"></tbody>
+      </table>
+    </div>
+    <p class="tbl-empty" id="holdEmpty">아직 보유한 종목이 없습니다. 트레이딩 탭에서 첫 매수를 해보세요!</p>
+  </section>
+
+  <section class="card" aria-label="최근 체결">
+    <h2 class="card__title">최근 체결</h2>
+    <ul class="trades" id="tradeList"></ul>
+    <p class="tbl-empty" id="tradeEmpty">체결 내역이 없습니다.</p>
+  </section>
+
+  <section class="callout">
+    <strong>📚 이 페이지는 교육용 데모입니다</strong>
+    <span>시세는 실제 주가가 아니라 <strong>이 브라우저의 자바스크립트가 무작위로 생성</strong>하는 값이고,
+    포트폴리오는 <strong>이 브라우저(localStorage)에만</strong> 저장됩니다.
+    진짜 서비스가 되려면 실시간 시세를 주는 <strong>서버(애플리케이션 티어)</strong>와
+    계좌를 저장하는 <strong>데이터베이스(데이터 티어)</strong>가 필요합니다 — 다음 실습에서 만듭니다.</span>
+    <div class="order__row">
+      <button class="btn btn--ghost" id="resetBtn" type="button">포트폴리오 초기화</button>
+      <button class="btn btn--buy" id="resetYes" type="button" hidden>정말 초기화</button>
+      <button class="btn btn--ghost" id="resetNo" type="button" hidden>취소</button>
+    </div>
+    <p class="order__msg" id="resetMsg" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ==================== 탭 3: 시장 ==================== -->
+<section class="page" id="panel-market" aria-label="시장" hidden>
+  <section class="card">
+    <h2 class="card__title">NXT 빅테크 지수 <span class="watch__ticker">8종목 동일가중 · 기준 100</span></h2>
+    <div class="index-head">
+      <span class="index-head__value" id="idxValue"></span>
+      <span class="chip" id="idxChange"></span>
+    </div>
+    <div class="chart-wrap">
+      <svg id="idxChart" viewBox="0 0 640 120" role="img" aria-label="지수 차트"></svg>
+    </div>
+    <div class="market-summary" id="marketSummary"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">실시간 등락률 랭킹 <span class="watch__ticker">행을 누르면 트레이딩으로 이동</span></h2>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>순위</th><th>종목</th><th>현재가</th><th>기준가 대비</th><th>등락률</th></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<!-- ==================== 탭 4: 뉴스 ==================== -->
+<section class="page" id="panel-news" aria-label="뉴스" hidden>
+  <section class="card">
+    <h2 class="card__title">시장 뉴스 <span class="watch__ticker">가상의 데모 기사 — 기사를 누르면 해당 종목으로 이동</span></h2>
+    <ul class="news" id="newsList"></ul>
+    <div class="order__row">
+      <button class="btn btn--ghost" id="newsRefresh" type="button">새 기사 불러오기</button>
+    </div>
+  </section>
+</section>
 </main>
 
-<footer>NXT 증권 모의투자 데모 · 실제 금융 서비스가 아니며 어떤 투자 권유도 아닙니다 · NXT CLOUD 3-Tier Architecture 수업 자료</footer>
+<footer>NXT 증권 모의투자 데모 · 실제 금융 서비스가 아니며 어떤 투자 권유도 아닙니다 · 모든 기사·시세는 가상의 데이터입니다 · NXT CLOUD 3-Tier Architecture 수업 자료</footer>
 
 <script>
 "use strict";
@@ -416,6 +539,7 @@ const THEME_KEY = "nxtTrade.theme";
 
 /* ==================== 시세 엔진 ==================== */
 const market = {}; // t -> { price, hist: [{ts, p}] }
+const idxHist = []; // 지수 히스토리 [{ts, p}]
 
 function seedMarket() {
   const now = Date.now();
@@ -429,12 +553,22 @@ function seedMarket() {
     }
     market[s.t] = { price: hist[hist.length - 1].p, hist };
   });
+  // 지수 히스토리도 같은 구간으로 재구성
+  for (let i = 0; i < HIST_LEN; i++) {
+    const ts = now - (HIST_LEN - 1 - i) * TICK_MS;
+    const v = STOCKS.reduce((sum, s) => sum + market[s.t].hist[i].p / s.base, 0) / STOCKS.length * 100;
+    idxHist.push({ ts, p: v });
+  }
 }
 
 function step(p, s) {
   const drift = (s.base - p) * 0.004;            // 기준가로 약한 평균회귀
   const shock = p * s.vol * (Math.random() * 2 - 1) * 1.6;
   return Math.max(1, p + drift + shock);
+}
+
+function indexNow() {
+  return STOCKS.reduce((sum, s) => sum + market[s.t].price / s.base, 0) / STOCKS.length * 100;
 }
 
 function tick() {
@@ -445,10 +579,13 @@ function tick() {
     m.hist.push({ ts: now, p: m.price });
     if (m.hist.length > HIST_LEN) m.hist.shift();
   });
-  renderWatchlist();
-  renderQuote();
-  renderChart();
-  renderAssets();
+  idxHist.push({ ts: now, p: indexNow() });
+  if (idxHist.length > HIST_LEN) idxHist.shift();
+
+  renderTopAsset();
+  if (activeTab === "trade") { renderWatchlist(); renderQuote(); renderChart(); renderOrderMeta(); }
+  if (activeTab === "assets") renderAssets();
+  if (activeTab === "market") renderMarket();
 }
 
 /* ==================== 포트폴리오 ==================== */
@@ -472,9 +609,6 @@ function stockValue() {
   return Object.entries(pf.holdings).reduce(
     (sum, [t, h]) => sum + h.qty * market[t].price, 0);
 }
-function costBasis() {
-  return Object.values(pf.holdings).reduce((sum, h) => sum + h.qty * h.avg, 0);
-}
 
 /* ==================== 포맷 ==================== */
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -486,10 +620,30 @@ const fmtTime = (ts) => new Date(ts).toLocaleTimeString("ko-KR", {
   hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
 });
 
-/* ==================== DOM 참조 ==================== */
+/* ==================== DOM / 탭 ==================== */
 const $ = (id) => document.getElementById(id);
 let selected = STOCKS[0].t;
+let activeTab = "trade";
+const TABS = ["trade", "assets", "market", "news"];
 const watchRows = {}; // t -> {price, change, row}
+
+function switchTab(name) {
+  activeTab = name;
+  TABS.forEach((t) => {
+    $("panel-" + t).hidden = t !== name;
+    $("tab-" + t).setAttribute("aria-current", t === name ? "true" : "false");
+  });
+  if (name === "trade") { renderWatchlist(); renderQuote(); renderChart(); renderOrderMeta(); }
+  if (name === "assets") { renderAssets(); renderTrades(); }
+  if (name === "market") renderMarket();
+  if (name === "news") renderNews(false);
+}
+TABS.forEach((t) => $("tab-" + t).addEventListener("click", () => switchTab(t)));
+
+function selectStock(t) {
+  selected = t;
+  switchTab("trade");
+}
 
 /* ==================== 워치리스트 ==================== */
 function buildWatchlist() {
@@ -506,7 +660,7 @@ function buildWatchlist() {
       `<span class="watch__change"></span>`;
     btn.addEventListener("click", () => {
       selected = s.t;
-      renderAll();
+      renderWatchlist(); renderQuote(); renderChart(); renderOrderMeta();
     });
     li.appendChild(btn);
     ul.appendChild(li);
@@ -621,7 +775,6 @@ function renderChart() {
 /* ==================== 주문 ==================== */
 function renderOrderMeta() {
   const h = pf.holdings[selected];
-  const m = market[selected];
   $("orderMeta").innerHTML = h
     ? `<span>보유 <strong>${h.qty}주</strong></span>` +
       `<span>평균단가 <strong>${fmtP(h.avg)}</strong></span>` +
@@ -629,7 +782,6 @@ function renderOrderMeta() {
     : `<span>보유 <strong>0주</strong></span>` +
       `<span>주문가능 현금 <strong>${fmtP(pf.cash)}</strong></span>`;
   $("sellBtn").disabled = !h;
-  void m;
 }
 
 function orderMsg(text, ok) {
@@ -675,20 +827,22 @@ function trade(side) {
   pf.trades.unshift({ ts: Date.now(), t: selected, side, qty, price });
   if (pf.trades.length > 20) pf.trades.pop();
   save();
-  renderAssets();
+  renderTopAsset();
   renderOrderMeta();
-  renderTrades();
 }
 
 $("buyBtn").addEventListener("click", () => trade("buy"));
 $("sellBtn").addEventListener("click", () => trade("sell"));
 
 /* ==================== 자산 ==================== */
+function renderTopAsset() {
+  $("topAsset").textContent = fmtP(pf.cash + stockValue());
+}
+
 function renderAssets() {
   const sv = stockValue();
   const total = pf.cash + sv;
   const ret = (total - SEED_CASH) / SEED_CASH;
-  $("topAsset").textContent = fmtP(total);
   $("aCash").textContent = fmtP(pf.cash);
   $("aStock").textContent = fmtP(sv);
   $("aTotal").textContent = fmtP(total);
@@ -696,6 +850,22 @@ function renderAssets() {
   r.textContent = fmtPct(ret);
   r.className = `asset__value ${numCls(ret)}`;
 
+  // 자산 구성 (현금 + 종목별 평가금액)
+  const parts = [["현금", pf.cash, true]];
+  Object.entries(pf.holdings).forEach(([t, h]) => {
+    const s = STOCKS.find((x) => x.t === t);
+    parts.push([s.name, h.qty * market[t].price, false]);
+  });
+  $("alloc").innerHTML = parts.map(([label, v, isCash]) => {
+    const pct = total > 0 ? v / total : 0;
+    return `<div class="alloc__row">
+      <span class="alloc__label">${label}</span>
+      <span class="alloc__bar"><span class="alloc__fill${isCash ? " alloc__fill--cash" : ""}" style="width:${(pct * 100).toFixed(1)}%"></span></span>
+      <span class="alloc__pct">${(pct * 100).toFixed(1)}% · ${fmtP(v)}</span>
+    </div>`;
+  }).join("");
+
+  // 보유 종목 테이블
   const body = $("holdBody");
   const entries = Object.entries(pf.holdings);
   $("holdTable").style.display = entries.length ? "" : "none";
@@ -714,7 +884,6 @@ function renderAssets() {
       <td class="${numCls(pct)}">${fmtPct(pct)}</td>
     </tr>`;
   }).join("");
-  renderOrderMeta();
 }
 
 /* ==================== 체결 내역 ==================== */
@@ -732,7 +901,126 @@ function renderTrades() {
   }).join("");
 }
 
+/* ==================== 시장 탭 ==================== */
+function renderMarket() {
+  // 지수
+  const v = idxHist[idxHist.length - 1].p;
+  const chg = (v - 100) / 100;
+  $("idxValue").textContent = v.toFixed(2);
+  const chip = $("idxChange");
+  chip.textContent = `${arrow(chg)} ${fmtPct(chg)}`;
+  chip.className = `chip ${chg >= 0 ? "chip--up" : "chip--down"}`;
+
+  // 지수 스파크라인
+  const W = 640, H = 120, P = { t: 8, r: 52, b: 8, l: 10 };
+  const ps = idxHist.map((h) => h.p);
+  let min = Math.min(...ps), max = Math.max(...ps);
+  if (max - min < 0.05) { const m = (max + min) / 2; min = m - 0.05; max = m + 0.05; }
+  const x = (i) => P.l + (i / (idxHist.length - 1)) * (W - P.l - P.r);
+  const y = (p) => P.t + (1 - (p - min) / (max - min)) * (H - P.t - P.b);
+  const dir = chg >= 0 ? "up" : "down";
+  const line = idxHist.map((h, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(h.p).toFixed(1)}`).join("");
+  $("idxChart").innerHTML =
+    `<line class="chart-grid" x1="${P.l}" y1="${y(100).toFixed(1)}" x2="${W - P.r}" y2="${y(100).toFixed(1)}"/>` +
+    `<text class="chart-label" x="${W - P.r + 6}" y="${y(100).toFixed(1) * 1 + 3}">100</text>` +
+    `<path class="chart-line chart-line--${dir}" d="${line}"/>`;
+
+  // 상승/하락 요약
+  const ups = STOCKS.filter((s) => market[s.t].price > s.base).length;
+  const downs = STOCKS.filter((s) => market[s.t].price < s.base).length;
+  $("marketSummary").innerHTML =
+    `<span>상승 <strong class="num--up">${ups}</strong></span>` +
+    `<span>하락 <strong class="num--down">${downs}</strong></span>` +
+    `<span>보합 <strong>${STOCKS.length - ups - downs}</strong></span>` +
+    `<span>거래 가능 종목 <strong>${STOCKS.length}</strong></span>`;
+
+  // 등락률 랭킹
+  const ranked = [...STOCKS]
+    .map((s) => ({ s, chg: (market[s.t].price - s.base) / s.base }))
+    .sort((a, b) => b.chg - a.chg);
+  $("rankBody").innerHTML = ranked.map(({ s, chg: c }, i) => `
+    <tr class="rank-row" data-t="${s.t}" tabindex="0" role="link" aria-label="${s.name} 트레이딩으로 이동">
+      <td>${i + 1}</td>
+      <td>${s.name} <span class="watch__ticker">${s.t}</span></td>
+      <td>${fmtP(market[s.t].price)}</td>
+      <td class="${numCls(c)}">${arrow(c)} ${fmtP(Math.abs(market[s.t].price - s.base))}</td>
+      <td class="${numCls(c)}">${fmtPct(c)}</td>
+    </tr>`).join("");
+}
+$("rankBody").addEventListener("click", (e) => {
+  const row = e.target.closest(".rank-row");
+  if (row) selectStock(row.dataset.t);
+});
+$("rankBody").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const row = e.target.closest(".rank-row");
+  if (row) { e.preventDefault(); selectStock(row.dataset.t); }
+});
+
+/* ==================== 뉴스 탭 (가상 기사) ==================== */
+const NEWS_SOURCES = ["NXT 데일리", "월가브리핑", "테크스트림", "마켓나우"];
+const NEWS_UP = [
+  "{n}, 장중 {p} 상승… 기관 매수세 유입",
+  "\"실적 기대감\" {n}, {p} 오르며 강세",
+  "{n} 주가 {p} 상승 — 신제품 발표 앞두고 투자심리 개선",
+  "AI 수요 낙관론에 {n} {p} 상승세",
+];
+const NEWS_DOWN = [
+  "{n}, 차익 실현 매물에 {p} 하락",
+  "\"밸류에이션 부담\" {n}, {p} 약세",
+  "{n} 주가 {p} 하락 — 경쟁 심화 우려 부각",
+  "규제 리스크 재점화… {n} {p} 하락세",
+];
+const NEWS_FLAT = [
+  "{n}, 방향성 탐색하며 보합권 등락",
+  "{n} 주가 혼조 — 시장은 다음 실적 발표 대기",
+];
+let newsItems = [];
+
+function genNews() {
+  const now = Date.now();
+  newsItems = STOCKS.map((s) => {
+    const chg = (market[s.t].price - s.base) / s.base;
+    const pool = chg > 0.003 ? NEWS_UP : chg < -0.003 ? NEWS_DOWN : NEWS_FLAT;
+    const tpl = pool[Math.floor(Math.random() * pool.length)];
+    return {
+      t: s.t,
+      title: tpl.replace("{n}", s.name).replace("{p}", `${Math.abs(chg * 100).toFixed(1)}%`),
+      source: NEWS_SOURCES[Math.floor(Math.random() * NEWS_SOURCES.length)],
+      ts: now - (3 + Math.floor(Math.random() * 55)) * 60000,
+    };
+  }).sort((a, b) => b.ts - a.ts);
+}
+
+function renderNews(regen) {
+  if (regen || newsItems.length === 0) genNews();
+  const now = Date.now();
+  $("newsList").innerHTML = newsItems.map((n) => {
+    const mins = Math.max(1, Math.round((now - n.ts) / 60000));
+    const s = STOCKS.find((x) => x.t === n.t);
+    return `<li>
+      <button class="news__item" type="button" data-t="${n.t}">
+        <span class="news__title">${n.title}</span>
+        <span class="news__meta">
+          <span>${n.source}</span><span>·</span><span>${mins}분 전</span>
+          <span class="badge">${s.name} ${n.t}</span>
+        </span>
+      </button>
+    </li>`;
+  }).join("");
+}
+$("newsList").addEventListener("click", (e) => {
+  const item = e.target.closest(".news__item");
+  if (item) selectStock(item.dataset.t);
+});
+$("newsRefresh").addEventListener("click", () => renderNews(true));
+
 /* ==================== 초기화 (2단 확인) ==================== */
+function resetMsg(text) {
+  const el = $("resetMsg");
+  el.textContent = text;
+  el.className = "order__msg order__msg--ok";
+}
 $("resetBtn").addEventListener("click", () => {
   $("resetBtn").hidden = true; $("resetYes").hidden = false; $("resetNo").hidden = false;
 });
@@ -743,7 +1031,8 @@ $("resetYes").addEventListener("click", () => {
   pf = { cash: SEED_CASH, holdings: {}, trades: [] };
   save();
   $("resetBtn").hidden = false; $("resetYes").hidden = true; $("resetNo").hidden = true;
-  orderMsg("포트폴리오를 초기화했습니다 (시드머니 $10,000)", true);
+  resetMsg("포트폴리오를 초기화했습니다 (시드머니 $10,000)");
+  renderTopAsset();
   renderAssets();
   renderTrades();
 });
@@ -768,16 +1057,10 @@ $("resetYes").addEventListener("click", () => {
 })();
 
 /* ==================== 부트스트랩 ==================== */
-function renderAll() {
-  renderWatchlist();
-  renderQuote();
-  renderChart();
-  renderAssets();
-  renderTrades();
-}
 seedMarket();
 buildWatchlist();
-renderAll();
+renderTopAsset();
+switchTab("trade");
 setInterval(tick, TICK_MS);
 </script>
 </body>
