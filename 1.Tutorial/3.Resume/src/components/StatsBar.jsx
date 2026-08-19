@@ -1,59 +1,56 @@
 import { ThumbsUp, Users } from 'lucide-react';
 
-const SETUP_HINT = 'Lambda URL을 설정하세요';
+const SETUP_HINT = 'Lambda URL 미설정';
 
-function formatCount(value, isConfigured) {
-  if (!isConfigured) return SETUP_HINT;
-  if (value === null) return '불러오는 중…';
-  return value.toLocaleString('ko-KR');
-}
+function StatCard({ icon: Icon, label, value, isConfigured }) {
+  const display = !isConfigured ? SETUP_HINT : value === null ? '···' : value.toLocaleString('ko-KR');
 
-function Stat({ icon: Icon, label, value, isConfigured }) {
   return (
-    <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 text-muted flex-shrink-0" aria-hidden="true" />
-      <span className="font-body text-sm text-muted">{label}</span>
-      <span
-        className={
-          isConfigured
-            ? 'font-heading text-lg font-semibold tabular-nums'
-            : 'font-body text-sm text-faint'
-        }
-      >
-        {formatCount(value, isConfigured)}
+    <div className="card flex flex-1 items-center gap-3 p-4">
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+        <Icon className="h-4 w-4" aria-hidden="true" />
       </span>
+      <div className="min-w-0">
+        <p className="text-xs text-faint">{label}</p>
+        <p
+          className={
+            isConfigured
+              ? 'text-xl font-bold tabular-nums tracking-tight'
+              : 'truncate text-sm font-medium text-faint'
+          }
+        >
+          {display}
+        </p>
+      </div>
     </div>
   );
 }
 
 export default function StatsBar({ visitCount, likeCount, onLike, isConfigured, error }) {
   return (
-    <div className="p-4 rounded-lg border border-line bg-card flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <Stat icon={Users} label="방문자수" value={visitCount} isConfigured={isConfigured} />
-          <Stat icon={ThumbsUp} label="좋아요" value={likeCount} isConfigured={isConfigured} />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        <StatCard icon={Users} label="방문자수" value={visitCount} isConfigured={isConfigured} />
+        <StatCard icon={ThumbsUp} label="좋아요" value={likeCount} isConfigured={isConfigured} />
+
+        <div className="card flex items-center justify-center p-4">
+          <button type="button" onClick={onLike} disabled={!isConfigured} className="btn btn--primary">
+            <ThumbsUp className="h-4 w-4" aria-hidden="true" />
+            좋아요
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onLike}
-          disabled={!isConfigured}
-          className="px-4 py-2 rounded bg-ink text-surface font-body text-sm flex items-center gap-2 transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <ThumbsUp className="w-4 h-4" aria-hidden="true" />
-          좋아요
-        </button>
       </div>
 
       {!isConfigured && (
-        <p className="font-body text-xs text-faint">
-          <code className="font-mono">src/config.js</code>의 <code className="font-mono">LAMBDA_URL</code>에
-          Lambda 함수 URL을 넣으면 실제 카운터가 동작한다.
+        <p className="text-xs text-faint">
+          <code className="rounded bg-sunk px-1.5 py-0.5 font-mono">src/config.js</code>의{' '}
+          <code className="rounded bg-sunk px-1.5 py-0.5 font-mono">LAMBDA_URL</code>에 Lambda 함수
+          URL을 넣으면 실제 카운터가 동작한다.
         </p>
       )}
 
       {error && (
-        <p role="status" className="font-body text-xs text-faint">
+        <p role="status" className="text-xs text-faint">
           카운터를 불러오지 못했다: {error}
         </p>
       )}

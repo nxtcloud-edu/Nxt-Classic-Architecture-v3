@@ -9,12 +9,12 @@ export default function ChartLegend({ items }) {
         <li key={item.label} className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+            className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
             style={{ backgroundColor: item.color }}
           />
-          <span className="font-body text-sm text-muted">{item.label}</span>
+          <span className="text-sm text-muted">{item.label}</span>
           {item.value != null && (
-            <span className="font-body text-sm text-ink tabular-nums">{item.value}</span>
+            <span className="text-sm font-semibold tabular-nums text-ink">{item.value}</span>
           )}
         </li>
       ))}

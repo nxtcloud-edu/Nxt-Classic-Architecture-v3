@@ -58,9 +58,13 @@ export const LAMBDA_URL = 'https://abc123.lambda-url.us-east-1.on.aws';
 
 브라우저 탭 제목은 `index.html`의 `<title>`에서 바꾼다.
 
-## 색 바꾸기
+## 디자인 바꾸기
 
-색은 전부 `src/index.css` 상단의 CSS 변수로 정의돼 있다. `:root`가 라이트, `.dark`가 다크다. 두 블록의 값만 고치면 앱 전체 색이 따라 바뀐다.
+색은 전부 `src/index.css` 상단의 CSS 변수로 정의돼 있다. `:root`가 라이트, `.dark`가 다크다. 두 블록의 값만 고치면 앱 전체 색이 따라 바뀐다. 포인트 색을 바꾸고 싶으면 `--color-accent`와 `--color-accent-2`(그라디언트 끝색), `--color-accent-soft`(배지·아이콘 배경) 세 개를 함께 옮긴다.
+
+카드·칩·버튼은 `src/index.css` 아래쪽의 `.card` / `.chip` / `.btn` 클래스로 정의돼 있다. 새 UI를 만들 때는 여기서 클래스를 골라 쓰고, 컴포넌트에 색을 직접 박지 않는다.
+
+서체는 Pretendard를 CDN에서 불러온다(`index.html`). 오프라인에서도 쓰려면 npm 패키지로 받아 번들에 포함시키면 된다.
 
 차트 색만 따로 관리한다 — `src/lib/chartPalette.js`. 색맹 사용자도 계열을 구분할 수 있도록 검증된 조합이라, 바꿀 때는 대비를 함께 확인한다.
 

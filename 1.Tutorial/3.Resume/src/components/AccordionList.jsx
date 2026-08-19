@@ -7,7 +7,7 @@ function AccordionItem({ item }) {
   const buttonId = useId();
 
   return (
-    <article className="rounded-lg border border-line bg-card">
+    <article className="card-interactive overflow-hidden">
       <h3>
         <button
           type="button"
@@ -15,29 +15,35 @@ function AccordionItem({ item }) {
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((prev) => !prev)}
-          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left hover:text-accent transition-colors"
+          className="flex w-full items-center justify-between gap-4 p-5 text-left transition-colors duration-200 hover:bg-sunk"
         >
-          <span>
-            <span className="block font-heading text-lg font-semibold leading-snug">
-              {item.title}
-            </span>
+          <span className="min-w-0">
+            <span className="block font-semibold leading-snug tracking-tight">{item.title}</span>
             {item.description && (
-              <span className="block font-body text-sm text-muted mt-1">{item.description}</span>
+              <span className="mt-1 block text-sm text-muted">{item.description}</span>
             )}
           </span>
-          <ChevronDown
-            className={`w-5 h-5 flex-shrink-0 text-muted transition-transform ${
+          <span
+            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-line text-muted transition-transform duration-200 ${
               open ? 'rotate-180' : ''
             }`}
             aria-hidden="true"
-          />
+          >
+            <ChevronDown className="h-4 w-4" />
+          </span>
         </button>
       </h3>
 
       <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!open}>
-        <ul className="px-5 pb-5 flex flex-col gap-2 font-body text-sm text-muted list-disc list-inside">
+        <ul className="flex flex-col gap-2.5 border-t border-line px-5 py-4">
           {item.achievements.map((achievement) => (
-            <li key={achievement}>{achievement}</li>
+            <li key={achievement} className="flex gap-2.5 text-sm leading-relaxed text-muted">
+              <span
+                className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"
+                aria-hidden="true"
+              />
+              {achievement}
+            </li>
           ))}
         </ul>
       </div>
@@ -49,9 +55,7 @@ export default function AccordionList({ items, columns = 1 }) {
   return (
     <div
       className={
-        columns === 2
-          ? 'grid grid-cols-1 md:grid-cols-2 gap-4'
-          : 'flex flex-col gap-4'
+        columns === 2 ? 'grid grid-cols-1 gap-4 md:grid-cols-2' : 'flex flex-col gap-4'
       }
     >
       {items.map((item) => (

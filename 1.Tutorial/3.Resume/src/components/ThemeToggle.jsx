@@ -7,9 +7,9 @@ export default function ThemeToggle({ darkMode, onToggle }) {
       onClick={onToggle}
       aria-pressed={darkMode}
       aria-label={darkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      className="p-2 rounded-full border border-line text-muted hover:text-ink hover:border-ink transition-colors"
+      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-card text-muted transition-colors duration-200 hover:border-accent hover:text-accent"
     >
-      {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }

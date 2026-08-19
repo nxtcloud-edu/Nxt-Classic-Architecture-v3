@@ -8,11 +8,11 @@ function MixTooltip({ active, payload, theme }) {
 
   return (
     <div
-      className="px-3 py-2 rounded-lg border border-line shadow-lg"
+      className="rounded-xl border border-line px-3.5 py-2 shadow-pop"
       style={{ backgroundColor: theme.card }}
     >
-      <p className="font-body text-sm text-ink">
-        {entry.name} <span className="tabular-nums">{entry.value}%</span>
+      <p className="text-sm font-medium text-ink">
+        {entry.name} <span className="tabular-nums text-muted">{entry.value}%</span>
       </p>
     </div>
   );
@@ -22,8 +22,8 @@ export default function ProjectMixChart({ data, darkMode }) {
   const theme = chartTheme(darkMode);
 
   return (
-    <div className="flex flex-col gap-4">
-      <ResponsiveContainer width="100%" height={220}>
+    <div className="flex flex-col gap-5">
+      <ResponsiveContainer width="100%" height={210}>
         <PieChart>
           <Pie
             data={data}

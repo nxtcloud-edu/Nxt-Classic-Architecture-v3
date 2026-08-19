@@ -10,6 +10,7 @@ import {
   skills,
 } from './data/resume.js';
 import { useCounters } from './hooks/useCounters.js';
+import TopNav from './components/TopNav.jsx';
 import Hero from './components/Hero.jsx';
 import StatsBar from './components/StatsBar.jsx';
 import Section from './components/Section.jsx';
@@ -34,50 +35,58 @@ export default function App() {
   }, [darkMode]);
 
   return (
-    <div className="min-h-screen bg-surface text-ink">
-      <main className="max-w-3xl mx-auto px-6 pb-16 flex flex-col">
-        <Hero
-          profile={profile}
-          contacts={contacts}
-          darkMode={darkMode}
-          onToggleTheme={() => setDarkMode((prev) => !prev)}
+    <div className="min-h-screen bg-bg text-ink">
+      <TopNav
+        name={profile.name}
+        darkMode={darkMode}
+        onToggleTheme={() => setDarkMode((prev) => !prev)}
+      />
+
+      <main className="mx-auto max-w-4xl px-5 pb-20">
+        <Hero profile={profile} contacts={contacts} />
+
+        <StatsBar
+          visitCount={visitCount}
+          likeCount={likeCount}
+          onLike={like}
+          isConfigured={isConfigured}
+          error={error}
         />
 
-        <div className="pt-8">
-          <StatsBar
-            visitCount={visitCount}
-            likeCount={likeCount}
-            onLike={like}
-            isConfigured={isConfigured}
-            error={error}
-          />
-        </div>
-
-        <Section id="achievements" title="주요 성과">
+        <Section id="achievements" eyebrow="Achievements" title="주요 성과">
           <Achievements items={achievements} />
         </Section>
 
-        <Section id="growth" title="연도별 성장 추이">
-          <ExperienceChart data={experienceData} darkMode={darkMode} />
+        <Section
+          id="growth"
+          eyebrow="Growth"
+          title="연도별 성장 추이"
+          description="자격증과 활동이 해마다 어떻게 늘었는지 보여준다."
+        >
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+            <div className="card p-5 lg:col-span-3">
+              <ExperienceChart data={experienceData} darkMode={darkMode} />
+            </div>
+            <div className="card p-5 lg:col-span-2">
+              <h3 className="mb-4 text-sm font-semibold text-muted">프로젝트 경험 구성</h3>
+              <ProjectMixChart data={projectMix} darkMode={darkMode} />
+            </div>
+          </div>
         </Section>
 
-        <Section id="project-mix" title="프로젝트 경험 구성">
-          <ProjectMixChart data={projectMix} darkMode={darkMode} />
-        </Section>
-
-        <Section id="education" title="교육 이수">
+        <Section id="education" eyebrow="Education" title="교육 이수">
           <AccordionList items={education} columns={2} />
         </Section>
 
-        <Section id="projects" title="프로젝트">
+        <Section id="projects" eyebrow="Projects" title="프로젝트">
           <AccordionList items={projects} />
         </Section>
 
-        <Section id="skills" title="기술">
+        <Section id="skills" eyebrow="Skills" title="기술">
           <SkillTags items={skills} />
         </Section>
 
-        <footer className="py-10 text-center font-body text-sm text-faint">
+        <footer className="border-t border-line pt-8 text-center text-sm text-faint">
           <p>React + Vite + Tailwind CSS로 제작</p>
           <p className="mt-1">AWS 배포: S3 + Lambda + DynamoDB</p>
         </footer>

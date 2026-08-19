@@ -8,52 +8,169 @@
    ───────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --color-ink: #09090B;
-  --color-muted: #3F3F46;
-  --color-faint: #71717A;
-  --color-accent: #2563EB;
-  --color-surface: #FAFAFA;
-  --color-card: #FFFFFF;
-  --color-line: #E4E4E7;
+
+  --color-bg: #f6f7f9;
+  --color-card: #ffffff;
+  --color-sunk: #f1f2f6;
+  --color-ink: #0d0f14;
+  --color-muted: #565d6d;
+  --color-faint: #6b7280;
+  --color-line: #e7e9ef;
+
+  --color-accent: #4f46e5;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #eef0fe;
+  --color-accent-2: #7c3aed;
+  --color-glass: rgba(255, 255, 255, 0.72);
+
+  --shadow-card: 0 1px 2px rgba(13, 15, 20, 0.04), 0 8px 24px rgba(13, 15, 20, 0.05);
+  --shadow-pop: 0 2px 4px rgba(13, 15, 20, 0.06), 0 16px 40px rgba(13, 15, 20, 0.1);
 }
 
 /* 다크 — App의 darkMode state가 <html>에 .dark 를 붙인다 */
 .dark {
   color-scheme: dark;
-  --color-ink: #FAFAFA;
-  --color-muted: #A1A1AA;
-  --color-faint: #8B8B93;
-  --color-accent: #60A5FA;
-  --color-surface: #09090B;
-  --color-card: #18181B;
-  --color-line: #27272A;
+
+  --color-bg: #08090c;
+  --color-card: #14161c;
+  --color-sunk: #1c1f27;
+  --color-ink: #f4f5f7;
+  --color-muted: #a2a9b8;
+  --color-faint: #8b93a5;
+  --color-line: #24272f;
+
+  --color-accent: #818cf8;
+  --color-accent-ink: #0d0f14;
+  --color-accent-soft: #1a1d30;
+  --color-accent-2: #a78bfa;
+  --color-glass: rgba(20, 22, 28, 0.72);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  background-color: var(--color-surface);
+  background-color: var(--color-bg);
   color: var(--color-ink);
-  font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
   background-color: var(--color-accent);
-  color: #ffffff;
+  color: var(--color-accent-ink);
 }
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 3px;
+  border-radius: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   프리미티브 — 클래스를 붙인 요소만 스타일된다
+   ───────────────────────────────────────────── */
+@layer components {
+  /* 액센트 그라디언트. 아바타·히어로 글로우 등 절제해서만 쓴다 */
+  .gradient-accent {
+    background-image: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  }
+
+  .gradient-text {
+    background-image: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 히어로 뒤에 은은하게 깔리는 빛무리 */
+  .hero-glow {
+    background-image: radial-gradient(
+      60% 80% at 20% 0%,
+      var(--color-accent-soft) 0%,
+      transparent 70%
+    );
+  }
+
+  /* 카드 */
+  .card {
+    @apply rounded-2xl border border-line bg-card shadow-card;
+  }
+
+  .card-interactive {
+    @apply rounded-2xl border border-line bg-card shadow-card transition-shadow duration-200;
+  }
+
+  .card-interactive:hover {
+    box-shadow: var(--shadow-pop);
+  }
+
+  /* pill / chip */
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm text-muted transition-colors duration-200;
+  }
+
+  .chip:hover {
+    @apply border-accent text-accent;
+  }
+
+  /* 상태 배지 — 전용 modifier로 완결한다 (공유 유틸에 !important 금지) */
+  .chip--accent {
+    @apply border-transparent bg-accent-soft font-semibold text-accent;
+  }
+
+  .chip--accent:hover {
+    @apply border-transparent text-accent;
+  }
+
+  /* 버튼 */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200;
+  }
+
+  .btn--primary {
+    @apply bg-accent text-accent-ink;
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    @apply -translate-y-0.5;
+    box-shadow: var(--shadow-pop);
+  }
+
+  .btn--ghost {
+    @apply border border-line bg-card text-muted;
+  }
+
+  .btn--ghost:hover:not(:disabled) {
+    @apply border-accent text-accent;
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  /* 섹션 앵커가 스티키 헤더 밑으로 숨지 않게 */
+  .anchor-offset {
+    scroll-margin-top: 5.5rem;
   }
 }
