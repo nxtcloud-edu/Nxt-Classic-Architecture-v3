@@ -654,11 +654,6 @@ body {
   line-height: 1.5;
 }
 
-.note__waiting-note {
-  color: var(--fg-muted);
-  font-weight: 400;
-}
-
 .note__meta {
   font-size: 0.75rem;
   color: var(--fg-subtle);

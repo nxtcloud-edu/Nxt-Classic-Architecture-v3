@@ -55,7 +55,6 @@ function NoteCard({ note, pendingType, onRequestAi, onDelete }) {
           <span>
             {AI_INFO[pendingType].emoji} {AI_INFO[pendingType].label}가 분석 중입니다
           </span>
-          <span className="note__waiting-note">최대 10초 후 표시됩니다</span>
         </div>
       )}
 
