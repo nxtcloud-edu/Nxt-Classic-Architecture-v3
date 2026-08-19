@@ -35,10 +35,19 @@ npm run preview  # 빌드 결과 미리보기
 
 배포할 때는 `dist/` 디렉터리의 내용을 웹 서버(S3, Nginx 등)에 올리면 된다.
 
+## 디자인 · 테마
+
+- 색·radius·그림자·폰트는 전부 `src/App.css` 상단의 CSS 변수 토큰을 경유한다. 컴포넌트 규칙에 hex 를 직접 쓰지 않는다.
+- 토큰은 3계층이다. `:root`(라이트 기본) → `@media (prefers-color-scheme: dark)`(OS 선호) →
+  `:root[data-theme]`(헤더 토글이 OS 선호를 이긴다).
+- 헤더 우측 버튼이 `OS 설정 → 라이트 → 다크` 순으로 순환하며, 선택값은 localStorage(`aiNote.theme`)에 남는다.
+- 본문 글꼴은 Pretendard Variable(dynamic subset CDN)이고, 로드에 실패하면 시스템 산세리프로 떨어진다.
+
 ## 동작 메모
 
 - 노트를 저장하면 서버가 곧바로 응답하고 AI 분석은 백그라운드에서 진행된다. 분석이 끝나기 전까지
-  해당 노트에는 "AI 분석 중..."이 표시되고, 10초 주기 폴링으로 결과가 도착하면 자동으로 교체된다.
+  해당 노트에는 점 애니메이션과 스켈레톤으로 "분석 중"이 표시되고, 10초 주기 폴링으로 결과가
+  도착하면 자동으로 교체된다.
 - AI 분석이 실패해 `ai_note`가 비어 있는 노트에는 "Gemini 조언 요청" 버튼이 나타난다.
   이 버튼은 `POST /ainotes`로 재요청을 보낸다.
 - AI 응답은 마크다운으로 렌더링된다(`react-markdown` + `remark-gfm`).
