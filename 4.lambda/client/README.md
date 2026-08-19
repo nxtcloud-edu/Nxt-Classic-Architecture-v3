@@ -23,6 +23,13 @@ Vite는 `VITE_` 접두사가 붙은 변수만 클라이언트 코드에 노출�
 `.env`를 고친 뒤에는 개발 서버를 다시 시작해야 반영된다.
 값이 없으면 앱이 안내 화면을 띄운다.
 
+## 화면 구성
+
+순수 CSS 로만 만들었고 `src/App.css` 상단의 3계층 토큰이 색을 전부 관리한다.
+`:root`(라이트) → `@media (prefers-color-scheme: dark)` → `:root[data-theme]` 순으로
+뒤쪽이 앞쪽을 덮으며, 헤더의 테마 버튼이 OS 설정 → 라이트 → 다크를 순환시킨다.
+선택값은 localStorage(`lambdaNote.theme`)에 남는다.
+
 ## AI 응답이 바로 보이지 않는 이유
 
 AI 응답은 EC2가 아니라 Lambda가 DB에 직접 저장한다.
