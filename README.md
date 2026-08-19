@@ -238,6 +238,7 @@ npm run dev
 | Lambda 기본 타임아웃 3초 | AI 호출이 `Task timed out` 으로 실패 | Lambda 타임아웃 설정과 AI 응답 지연 특성 |
 | `2.RandomTextApp` 서버의 설정 상태 노출 | `GET /` 응답에 DB 설정값이 그대로 보임 | 실습 중 설정 오류 진단(왜 실무에서 위험한지 함께 토론) |
 | Lambda Function URL 인증 NONE | URL만 알면 누구나 호출 가능 | 수업 단순화를 위한 선택 — 인증 강화는 심화 주제 |
+| 새로 만든 Lambda 기본 코드 | AI 조언 자리에 `Hello from Lambda!` 표시 | Lambda 연결 확인 → 이제 Lambda 코드를 교체해야 한다는 신호 |
 
 **역할 분리 원칙 (4.lambda):** 사용자 노트는 EC2(Express)가 DB에 쓰고, **AI 응답은 Lambda가 직접 DB에 씁니다.** "AI 응답 저장을 EC2로 옮기기", "S3에서 EC2를 거치지 않고 Lambda 직접 호출하기" 등은 개인 과제로 진행합니다.
 

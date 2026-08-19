@@ -192,6 +192,25 @@ app.delete("/notes", checkDbConnection, async (req, res) => {
   }
 });
 
+// Lambda가 ai_note를 직접 채우지 않았다면(= 방금 만든 기본 Lambda:
+// "Hello from Lambda!") 응답 텍스트를 그대로 저장해서 화면에 보이게 한다.
+// 학생이 "Lambda 연결은 됐다, 이제 Lambda 코드를 고쳐야 한다"를 알 수 있는 장치.
+// 완성된 Lambda는 스스로 DB에 쓰므로 이 폴백은 동작하지 않는다.
+const saveLambdaResponseIfEmpty = async (noteId, lambdaResponse, aiType) => {
+  if (typeof lambdaResponse !== "string" || !lambdaResponse.trim()) return;
+
+  const [rows] = await pool.execute("SELECT ai_note FROM notes WHERE id = ?", [
+    noteId,
+  ]);
+  if (rows.length === 0 || rows[0].ai_note !== null) return;
+
+  await pool.execute("UPDATE notes SET ai_note = ?, ai_type = ? WHERE id = ?", [
+    lambdaResponse,
+    aiType,
+    noteId,
+  ]);
+};
+
 // Gemini 조언 요청 처리 (GPT에서 변경)
 // AI 응답을 notes 테이블에 저장하는 것은 Lambda의 역할이다.
 // EC2는 Lambda를 호출하고, 결과는 클라이언트 폴링으로 반영된다.
@@ -212,8 +231,10 @@ app.post("/gemini-notes", checkDbConnection, async (req, res) => {
 
   try {
     console.log("Gemini Lambda 함수 호출 중...");
-    await callGeminiLambda(content, noteId);
+    const lambdaResponse = await callGeminiLambda(content, noteId);
     console.log("Gemini Lambda 함수 호출 완료");
+
+    await saveLambdaResponseIfEmpty(noteId, lambdaResponse, "gemini");
 
     res.json({ message: "Gemini 분석 요청이 처리되었습니다" });
   } catch (error) {
@@ -244,8 +265,10 @@ app.post("/nova-notes", checkDbConnection, async (req, res) => {
 
   try {
     console.log("Nova Lambda 함수 호출 중...");
-    await callNovaLambda(content, noteId);
+    const lambdaResponse = await callNovaLambda(content, noteId);
     console.log("Nova Lambda 함수 호출 완료");
+
+    await saveLambdaResponseIfEmpty(noteId, lambdaResponse, "nova");
 
     res.json({ message: "Nova 분석 요청이 처리되었습니다" });
   } catch (error) {
